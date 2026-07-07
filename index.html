@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>渋谷 カフェマップ</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; }
+#map { height: 100%; width: 100%; }
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);
+  padding: 14px 20px; text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.header h1 { font-size: 18px; font-weight: 700; color: #333; letter-spacing: 0.05em; }
+.header h1 span { color: #d4a373; }
+.header p { font-size: 12px; color: #888; margin-top: 2px; }
+.leaflet-popup-content-wrapper {
+  border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.leaflet-popup-content { margin: 12px 16px; }
+.popup-name { font-size: 15px; font-weight: 700; color: #333; margin-bottom: 4px; }
+.popup-addr { font-size: 12px; color: #999; margin-bottom: 4px; }
+.popup-desc { font-size: 13px; color: #555; }
+.popup-actions { display: flex; gap: 8px; margin-top: 8px; }
+.popup-btn {
+  flex: 1; padding: 6px 0; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+}
+.popup-btn:hover { opacity: 0.8; }
+.popup-btn-edit { background: #e8d5c4; color: #7a5a3a; }
+.popup-btn-delete { background: #f5d0d0; color: #b34a4a; }
+.custom-marker {
+  width: 28px; height: 28px; border-radius: 50% 50% 50% 0;
+  background: #d4a373; transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.custom-marker-inner {
+  width: 12px; height: 12px; border-radius: 50%; background: #fff;
+  transform: rotate(45deg);
+}
+.form-toggle {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  width: 56px; height: 56px; border-radius: 50%; border: none;
+  background: #d4a373; color: #fff; font-size: 28px; cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s;
+}
+.form-toggle:hover { transform: scale(1.08); }
+.form-toggle.open { transform: rotate(45deg); background: #b5835a; }
+
+.form-panel {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+  background: #fff; border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+  padding: 20px 24px 28px;
+  transform: translateY(100%); transition: transform 0.3s ease;
+  max-height: 70vh; overflow-y: auto;
+}
+.form-panel.open { transform: translateY(0); }
+.form-panel h2 { font-size: 16px; font-weight: 700; color: #333; margin-bottom: 16px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; }
+.form-group input, .form-group textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+  font-size: 14px; font-family: inherit; outline: none; transition: border 0.2s;
+}
+.form-group input:focus, .form-group textarea:focus { border-color: #d4a373; }
+.form-group textarea { resize: vertical; min-height: 56px; }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+.form-actions { display: flex; gap: 10px; margin-top: 8px; }
+.btn {
+  flex: 1; padding: 11px 0; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: #d4a373; color: #fff; }
+.btn-cancel { background: #eee; color: #666; }
+.geo-status { font-size: 11px; font-weight: 400; color: #999; margin-left: 6px; }
+.geo-status.loading { color: #d4a373; }
+.geo-status.success { color: #6a994e; }
+.geo-status.error { color: #b34a4a; }
+.map-click-hint {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 500;
+  background: rgba(0,0,0,0.7); color: #fff; padding: 8px 16px; border-radius: 20px;
+  font-size: 12px; pointer-events: none; opacity: 0;
+  transition: opacity 0.4s; white-space: nowrap;
+}
+.map-click-hint.show { opacity: 1; }
+
+@media (max-width: 600px) {
+  .header h1 { font-size: 16px; }
+  .form-panel { padding: 16px 18px 24px; }
+  .form-toggle { bottom: 16px; right: 16px; width: 48px; height: 48px; font-size: 24px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>&#9749; <span>Shibuya</span> Cafe Map</h1>
+  <p>渋谷のオススメカフェを探そう</p>
+</div>
+<div id="map"></div>
+<div class="map-click-hint" id="hint">地図をクリックして位置を指定</div>
+<button class="form-toggle" id="formToggle">+</button>
+
+<div class="form-panel" id="formPanel">
+  <h2 id="formTitle">新しいカフェを登録</h2>
+  <div class="form-group">
+    <label for="cafeName">カフェ名</label>
+    <input type="text" id="cafeName" placeholder="例：カフェ・ド・クリエ 渋谷店">
+  </div>
+  <div class="form-group">
+    <label for="cafeAddress">住所 <span id="geoStatus" class="geo-status"></span></label>
+    <input type="text" id="cafeAddress" placeholder="地図をクリックすると自動入力されます">
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="cafeLat">緯度</label>
+      <input type="number" id="cafeLat" step="any" placeholder="例：35.6598">
+    </div>
+    <div class="form-group">
+      <label for="cafeLng">経度</label>
+      <input type="number" id="cafeLng" step="any" placeholder="例：139.7012">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="cafeDesc">一言コメント</label>
+    <textarea id="cafeDesc" placeholder="例：落ち着いた雰囲気でゆったり過ごせる定番カフェ"></textarea>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-cancel" id="formCancel">キャンセル</button>
+    <button class="btn btn-primary" id="formSubmit">登録する</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const SAMPLE_CAFES = [
+  { id: 1, name: 'カフェ・ド・クリエ 渋谷店', lat: 35.6598, lng: 139.7012, address: '東京都渋谷区道玄坂1-2-3', desc: '落ち着いた雰囲気でゆったり過ごせる定番カフェ' },
+  { id: 2, name: 'ABOUT LIFE COFFEE BREWERS', lat: 35.6614, lng: 139.6994, address: '東京都渋谷区道玄坂1-19-8', desc: 'スペシャルティコーヒーが楽しめる人気のスタンド' },
+  { id: 3, name: 'Fuglen Tokyo', lat: 35.6628, lng: 139.7070, address: '東京都渋谷区富ヶ谷1-16-11', desc: '北欧家具に囲まれたおしゃれな空間で本格コーヒー' },
+  { id: 4, name: 'ストリーマーコーヒーカンパニー', lat: 35.6605, lng: 139.6968, address: '東京都渋谷区渋谷1-20-28', desc: '焙煎したての豆で淹れる絶品ラテが自慢' },
+  { id: 5, name: 'ブルーボトルコーヒー 渋谷カフェ', lat: 35.6580, lng: 139.7030, address: '東京都渋谷区神南1-7-3', desc: '洗練された空間でシングルオリジンコーヒーを堪能' }
+];
+
+const STORAGE_KEY = 'cafe_map_data';
+
+let cafes = [];
+let nextId = 6;
+
+function loadCafes() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    cafes = JSON.parse(stored);
+    nextId = cafes.reduce(function (max, c) { return Math.max(max, c.id || 0); }, 0) + 1;
+  } else {
+    cafes = JSON.parse(JSON.stringify(SAMPLE_CAFES));
+    saveCafes();
+  }
+}
+
+function saveCafes() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cafes));
+}
+
+const map = L.map('map', { zoomControl: true }).setView([35.6605, 139.7000], 15);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19
+}).addTo(map);
+
+const customIcon = L.divIcon({
+  className: '',
+  html: '<div class="custom-marker"><div class="custom-marker-inner"></div></div>',
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+  popupAnchor: [0, -34]
+});
+
+const allMarkers = [];
+
+function clearMarkers() {
+  allMarkers.forEach(function (m) { map.removeLayer(m); });
+  allMarkers.length = 0;
+}
+
+function makePopupContent(cafe) {
+  return (
+    '<div class="popup-name">' + cafe.name + '</div>' +
+    '<div class="popup-addr">' + cafe.address + '</div>' +
+    '<div class="popup-desc">' + cafe.desc + '</div>' +
+    '<div class="popup-actions">' +
+      '<button class="popup-btn popup-btn-edit" data-id="' + cafe.id + '">編集</button>' +
+      '<button class="popup-btn popup-btn-delete" data-id="' + cafe.id + '">削除</button>' +
+    '</div>'
+  );
+}
+
+var editingId = null;
+
+function addMarkerForCafe(cafe) {
+  var marker = L.marker([cafe.lat, cafe.lng], { icon: customIcon }).addTo(map);
+  marker.bindPopup(makePopupContent(cafe));
+  allMarkers.push(marker);
+}
+
+function renderAllCafes() {
+  clearMarkers();
+  cafes.forEach(addMarkerForCafe);
+}
+
+loadCafes();
+renderAllCafes();
+
+var formToggle = document.getElementById('formToggle');
+var formPanel = document.getElementById('formPanel');
+var formTitle = document.getElementById('formTitle');
+var formSubmit = document.getElementById('formSubmit');
+var formCancel = document.getElementById('formCancel');
+var cafeName = document.getElementById('cafeName');
+var cafeAddress = document.getElementById('cafeAddress');
+var cafeLat = document.getElementById('cafeLat');
+var cafeLng = document.getElementById('cafeLng');
+var cafeDesc = document.getElementById('cafeDesc');
+var hint = document.getElementById('hint');
+var submitting = false;
+
+function resetFormFields() {
+  cafeName.value = '';
+  cafeAddress.value = '';
+  cafeLat.value = '';
+  cafeLng.value = '';
+  cafeDesc.value = '';
+}
+
+function setFormMode(mode, cafe) {
+  if (mode === 'edit' && cafe) {
+    editingId = cafe.id;
+    formTitle.textContent = 'カフェを編集';
+    formSubmit.textContent = '更新する';
+    cafeName.value = cafe.name;
+    cafeAddress.value = cafe.address;
+    cafeLat.value = cafe.lat;
+    cafeLng.value = cafe.lng;
+    cafeDesc.value = cafe.desc;
+  } else {
+    editingId = null;
+    formTitle.textContent = '新しいカフェを登録';
+    formSubmit.textContent = '登録する';
+    resetFormFields();
+  }
+}
+
+function openForm() {
+  formPanel.classList.add('open');
+  formToggle.classList.add('open');
+  formToggle.textContent = '+';
+  hint.classList.add('show');
+  cafeName.focus();
+}
+
+function closeForm() {
+  formPanel.classList.remove('open');
+  formToggle.classList.remove('open');
+  formToggle.textContent = '+';
+  hint.classList.remove('show');
+  if (!submitting) { setFormMode('add'); }
+  submitting = false;
+}
+
+formToggle.addEventListener('click', function () {
+  if (formPanel.classList.contains('open')) { closeForm(); }
+  else { setFormMode('add'); openForm(); }
+});
+
+formCancel.addEventListener('click', function () {
+  setFormMode('add');
+  closeForm();
+});
+
+function fetchAddress(lat, lng) {
+  var status = document.getElementById('geoStatus');
+  status.textContent = '住所を取得中...';
+  status.className = 'geo-status loading';
+
+  fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng + '&accept-language=ja')
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (data && data.display_name) {
+        cafeAddress.value = data.display_name;
+        status.textContent = '✓ 住所を取得しました';
+        status.className = 'geo-status success';
+      } else {
+        status.textContent = '住所を取得できませんでした';
+        status.className = 'geo-status error';
+      }
+    })
+    .catch(function () {
+      status.textContent = '取得に失敗しました';
+      status.className = 'geo-status error';
+    });
+}
+
+map.on('click', function (e) {
+  if (editingId !== null) {
+    if (!formPanel.classList.contains('open')) return;
+    cafeLat.value = e.latlng.lat.toFixed(6);
+    cafeLng.value = e.latlng.lng.toFixed(6);
+    fetchAddress(e.latlng.lat, e.latlng.lng);
+    return;
+  }
+  if (!formPanel.classList.contains('open')) { setFormMode('add'); openForm(); }
+  cafeLat.value = e.latlng.lat.toFixed(6);
+  cafeLng.value = e.latlng.lng.toFixed(6);
+  fetchAddress(e.latlng.lat, e.latlng.lng);
+});
+
+document.addEventListener('click', function (e) {
+  var target = e.target;
+
+  if (target.classList.contains('popup-btn-edit')) {
+    var id = parseInt(target.getAttribute('data-id'), 10);
+    var cafe = cafes.find(function (c) { return c.id === id; });
+    if (!cafe) return;
+    map.closePopup();
+    setFormMode('edit', cafe);
+    openForm();
+  }
+
+  if (target.classList.contains('popup-btn-delete')) {
+    var id = parseInt(target.getAttribute('data-id'), 10);
+    if (!confirm('「' + target.parentNode.parentNode.querySelector('.popup-name').textContent + '」を削除してもよろしいですか？')) return;
+    cafes = cafes.filter(function (c) { return c.id !== id; });
+    saveCafes();
+    renderAllCafes();
+    map.closePopup();
+  }
+});
+
+formSubmit.addEventListener('click', function () {
+  var name = cafeName.value.trim();
+  var address = cafeAddress.value.trim();
+  var lat = parseFloat(cafeLat.value);
+  var lng = parseFloat(cafeLng.value);
+  var desc = cafeDesc.value.trim();
+
+  if (!name) { alert('カフェ名を入力してください'); return; }
+  if (!address) { alert('住所を入力してください'); return; }
+  if (isNaN(lat) || lat < -90 || lat > 90) { alert('正しい緯度を入力してください'); return; }
+  if (isNaN(lng) || lng < -180 || lng > 180) { alert('正しい経度を入力してください'); return; }
+  if (!desc) { alert('一言コメントを入力してください'); return; }
+
+  if (editingId !== null) {
+    for (var i = 0; i < cafes.length; i++) {
+      if (cafes[i].id === editingId) {
+        cafes[i].name = name;
+        cafes[i].address = address;
+        cafes[i].lat = lat;
+        cafes[i].lng = lng;
+        cafes[i].desc = desc;
+        break;
+      }
+    }
+  } else {
+    cafes.push({
+      id: nextId++,
+      name: name,
+      address: address,
+      lat: lat,
+      lng: lng,
+      desc: desc
+    });
+  }
+
+  saveCafes();
+  renderAllCafes();
+
+  setFormMode('add');
+  submitting = true;
+  closeForm();
+});
+</script>
+</body>
+</html>
