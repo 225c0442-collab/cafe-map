@@ -369,6 +369,7 @@ body:not(.logged-in) .form-toggle { display: none !important; }
 
 <!-- auth bar -->
 <div class="auth-bar" id="authBar">
+  <span id="authGreeting" style="font-size:13px;color:#555;white-space:nowrap">こんにちは、ゲストさん</span>
   <div id="authNotLoggedIn">
     <input type="email" id="authEmail" class="auth-input" placeholder="メールアドレス" autocomplete="email">
     <input type="password" id="authPassword" class="auth-input" placeholder="パスワード" autocomplete="current-password">
@@ -917,6 +918,7 @@ document.addEventListener('click', async function (e) {
   }
 
   if (t.classList.contains('popup-btn-delete')) {
+    if (!requireLogin()) return;
     var id = parseInt(t.getAttribute('data-id'), 10);
     if (!confirm('「' + t.parentNode.parentNode.querySelector('.popup-name').textContent + '」を削除してもよろしいですか？')) return;
     try {
@@ -929,13 +931,17 @@ document.addEventListener('click', async function (e) {
   }
 
   if (t.classList.contains('popup-btn-like')) {
+    if (!requireLogin()) return;
     var id = parseInt(t.getAttribute('data-id'), 10);
     incrementLikeCount(id).then(function () {
       t.querySelector('.like-cnt').textContent = cafes.find(function (c) { return c.id === id; }).like_count;
+    }).catch(function (err) {
+      console.error(err); alert('いいねに失敗しました');
     });
   }
 
   if (t.classList.contains('comment-submit')) {
+    if (!requireLogin()) return;
     var cafeId = parseInt(t.getAttribute('data-id'), 10);
     var form = t.parentNode;
     var nick = form.querySelector('.comment-nick');
@@ -1180,6 +1186,7 @@ var authLoginBtn = document.getElementById('authLoginBtn');
 var authRegisterBtn = document.getElementById('authRegisterBtn');
 var authToggleLink = document.getElementById('authToggleLink');
 var authError = document.getElementById('authError');
+var authGreeting = document.getElementById('authGreeting');
 var authUsernameDisplay = document.getElementById('authUsernameDisplay');
 var authEmailDisplay = document.getElementById('authEmailDisplay');
 var authLogoutBtn = document.getElementById('authLogoutBtn');
@@ -1204,6 +1211,7 @@ function updateAuthUI(session) {
         authUsernameDisplay.textContent = currentUsername;
         authUsernameDisplay.classList.remove('auth-hidden');
         setup.classList.add('auth-hidden');
+        authGreeting.textContent = 'こんにちは、' + currentUsername + 'さん';
       } else {
         // check for pending username (from registration with email confirmation)
         var pending = sessionStorage.getItem('pendingUsername');
@@ -1215,6 +1223,7 @@ function updateAuthUI(session) {
               authUsernameDisplay.textContent = pending;
               authUsernameDisplay.classList.remove('auth-hidden');
               setup.classList.add('auth-hidden');
+              authGreeting.textContent = 'こんにちは、' + pending + 'さん';
               return;
             }
           });
@@ -1222,6 +1231,7 @@ function updateAuthUI(session) {
         if (!currentUsername) {
           authUsernameDisplay.classList.add('auth-hidden');
           setup.classList.remove('auth-hidden');
+          authGreeting.textContent = 'こんにちは、ゲストさん';
         }
       }
     });
@@ -1231,6 +1241,7 @@ function updateAuthUI(session) {
     currentUsername = null;
     currentEmail = null;
     document.body.classList.remove('logged-in');
+    authGreeting.textContent = 'こんにちは、ゲストさん';
   }
 }
 
@@ -1293,9 +1304,8 @@ authRegisterBtn.addEventListener('click', async function () {
     var { error: profErr } = await supabase.from('profiles').insert({ id: uid, username: username });
     if (profErr) { authShowError('プロフィール作成に失敗しました: ' + profErr.message); return; }
     currentUsername = username;
+    authGreeting.textContent = 'こんにちは、' + username + 'さん';
   } else {
-    // email confirmation required
-    // store username in sessionStorage for after confirmation
     sessionStorage.setItem('pendingUsername', username);
     authShowError('確認メールを送信しました。メール内のリンクをクリックしてからログインしてください。');
     return;
@@ -1307,6 +1317,7 @@ authRegisterBtn.addEventListener('click', async function () {
 // logout
 authLogoutBtn.addEventListener('click', async function () {
   await supabase.auth.signOut();
+  authGreeting.textContent = 'こんにちは、ゲストさん';
 });
 
 // username setup
@@ -1385,6 +1396,7 @@ async function setupUsername(username) {
   authUsernameDisplay.textContent = username;
   authUsernameDisplay.classList.remove('auth-hidden');
   document.getElementById('authUsernameSetup').classList.add('auth-hidden');
+  authGreeting.textContent = 'こんにちは、' + username + 'さん';
 }
 
 // modify openForm to check login
