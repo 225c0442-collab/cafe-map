@@ -237,6 +237,44 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
 }
 .map-click-hint.show { opacity: 1; }
 
+/* ===== changelog modal ===== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000;
+  background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-content {
+  background: #fff; border-radius: 14px; width: 90%; max-width: 480px;
+  max-height: 80vh; display: flex; flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2); transform: translateY(20px);
+  transition: transform 0.25s;
+}
+.modal-overlay.open .modal-content { transform: translateY(0); }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px; border-bottom: 1px solid #f0f0f0;
+}
+.modal-header h2 { font-size: 16px; font-weight: 700; color: #333; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: #f5f5f5; color: #666; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: #e8e8e8; }
+.modal-body { padding: 16px 20px 20px; overflow-y: auto; flex: 1; }
+.changelog-entry { margin-bottom: 18px; }
+.changelog-entry:last-child { margin-bottom: 0; }
+.changelog-date {
+  font-size: 12px; font-weight: 700; color: #d4a373; margin-bottom: 3px;
+  display: flex; align-items: center; gap: 6px;
+}
+.changelog-date span { font-weight: 400; color: #aaa; font-size: 11px; }
+.changelog-text {
+  font-size: 13px; color: #444; line-height: 1.6; padding-left: 4px;
+}
+.changelog-text li { margin-left: 16px; }
+
 /* ===== responsive ===== */
 @media (max-width: 700px) {
   .list-panel { width: 100%; }
@@ -253,6 +291,7 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
 <div class="header">
   <h1>&#9749; <span>Shibuya</span> Cafe Map</h1>
   <div class="header-actions">
+    <button class="header-btn" id="changelogBtn">&#128196; 更新ログ</button>
     <button class="header-btn" id="exportBtn">&#128229; 出力</button>
     <button class="header-btn" id="importBtn">&#128228; 読込</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
@@ -321,6 +360,16 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
   <div class="form-actions">
     <button class="btn btn-cancel" id="formCancel">キャンセル</button>
     <button class="btn btn-primary" id="formSubmit">登録する</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="changelogModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>&#128196; 更新ログ</h2>
+      <button class="modal-close" id="changelogClose">&times;</button>
+    </div>
+    <div class="modal-body" id="changelogBody"></div>
   </div>
 </div>
 
@@ -861,6 +910,35 @@ L.Control.CurrentLocation = L.Control.extend({
   }
 });
 new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
+
+// ---- changelog ----
+var CHANGELOG = [
+  { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li><li>複数端末間でカフェデータを共有可能に</li></ul>' },
+  { date: '2026-07-14', time: '15:00', text: '<b>詳細情報を追加</b><ul><li>営業時間・Wi-Fi・電源・駐車場の入力欄を追加</li><li>ポップアップに上記4項目を表示</li></ul>' },
+  { date: '2026-07-13', time: '20:00', text: '<b>便利機能を追加</b><ul><li>現在地表示（Geolocation API）</li><li>カフェ一覧サイドシート</li><li>検索ボックス（リアルタイムフィルター）</li><li>カテゴリタグ（電源あり / Wi-Fi完備 / テラス席 等）</li><li>JSON エクスポート / インポート</li><li>スターバックス5件を追加</li></ul>' },
+  { date: '2026-07-12', time: '14:00', text: '<b>編集・削除機能を追加</b><ul><li>ポップアップに編集・削除ボタンを追加</li><li>登録フォームの拡充</li><li>localStorage によるデータ永続化</li></ul>' },
+  { date: '2026-07-12', time: '10:00', text: '<b>カフェマップアプリ公開</b><ul><li>Leaflet を使った渋谷カフェマップ</li><li>サンプルカフェ5件を表示</li><li>地図クリックで住所自動取得</li><li>レスポンシブ対応</li></ul>' }
+];
+
+function renderChangelog() {
+  var body = document.getElementById('changelogBody');
+  body.innerHTML = CHANGELOG.map(function (e) {
+    return '<div class="changelog-entry"><div class="changelog-date">' + e.date + ' <span>' + e.time + '</span></div><div class="changelog-text">' + e.text + '</div></div>';
+  }).join('');
+}
+
+document.getElementById('changelogBtn').addEventListener('click', function () {
+  renderChangelog();
+  document.getElementById('changelogModal').classList.add('open');
+});
+
+document.getElementById('changelogClose').addEventListener('click', function () {
+  document.getElementById('changelogModal').classList.remove('open');
+});
+
+document.getElementById('changelogModal').addEventListener('click', function (e) {
+  if (e.target === this) this.classList.remove('open');
+});
 
 // ---- init ----
 await fetchCafes();
