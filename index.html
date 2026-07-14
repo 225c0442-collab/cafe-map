@@ -133,6 +133,21 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
 .popup-btn-edit { background: #e8d5c4; color: #7a5a3a; }
 .popup-btn-delete { background: #f5d0d0; color: #b34a4a; }
 .popup-btn-route { background: #d5e8d4; color: #3a7a3a; }
+.popup-btn-like { background: #fef0e6; color: #d47a3a; flex: 0 0 auto; padding: 6px 10px; }
+.popup-btn-like.liked { background: #fce4d6; color: #c0392b; }
+.popup-comments { margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 8px; }
+.popup-comments-title { font-size: 12px; font-weight: 700; color: #666; margin-bottom: 6px; }
+.popup-comment { font-size: 12px; margin-bottom: 5px; padding: 6px 8px; background: #fafafa; border-radius: 6px; }
+.popup-comment-nick { font-weight: 700; color: #d4a373; margin-right: 4px; }
+.popup-comment-text { color: #444; }
+.popup-comment-form { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.popup-comment-form input { border: 1px solid #ddd; border-radius: 6px; padding: 5px 8px; font-size: 11px; outline: none; font-family: inherit; }
+.popup-comment-form input:focus { border-color: #d4a373; }
+.comment-nick { width: 80px; }
+.comment-text { flex: 1; min-width: 100px; }
+.comment-submit { padding: 5px 10px; border: none; border-radius: 6px; background: #d4a373; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; }
+.comment-submit:hover { opacity: 0.85; }
+.comments-empty { font-size: 11px; color: #aaa; margin-bottom: 4px; }
 
 /* ===== markers ===== */
 .custom-marker {
@@ -427,7 +442,8 @@ function toCafe(row) {
     wifi: row.wifi === null ? null : !!row.wifi,
     power: row.power === null ? null : !!row.power,
     parking: row.parking === null ? null : !!row.parking,
-    tags: row.tags || []
+    tags: row.tags || [],
+    like_count: row.like_count || 0
   };
 }
 
@@ -450,7 +466,8 @@ async function insertCafe(cafe) {
     wifi: cafe.wifi,
     power: cafe.power,
     parking: cafe.parking,
-    tags: cafe.tags || []
+    tags: cafe.tags || [],
+    like_count: cafe.like_count || 0
   }).select();
   if (error) { console.error(error); throw error; }
   return data[0];
@@ -475,6 +492,26 @@ async function updateCafe(id, cafe) {
 async function deleteCafe(id) {
   var { error } = await supabase.from('cafes').delete().eq('id', id);
   if (error) { console.error(error); throw error; }
+}
+
+async function fetchComments(cafeId) {
+  var { data, error } = await supabase.from('comments').select('*').eq('cafe_id', cafeId).order('created_at', { ascending: true });
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
+
+async function insertComment(cafeId, nickname, text) {
+  var { data, error } = await supabase.from('comments').insert({ cafe_id: cafeId, nickname: nickname, text: text }).select();
+  if (error) { console.error(error); throw error; }
+  return data[0];
+}
+
+async function incrementLikeCount(id) {
+  var cafe = cafes.find(function (c) { return c.id === id; });
+  var current = cafe ? cafe.like_count : 0;
+  var { error } = await supabase.from('cafes').update({ like_count: current + 1 }).eq('id', id);
+  if (error) { console.error(error); throw error; }
+  if (cafe) cafe.like_count = current + 1;
 }
 
 // ---- markers ----
@@ -512,9 +549,19 @@ function makePopupContent(cafe) {
     '<div class="popup-addr">' + cafe.address + '</div>' +
     '<div class="popup-desc">' + cafe.desc + '</div>' +
     '<div class="popup-actions">' +
+      '<button class="popup-btn popup-btn-like" data-id="' + cafe.id + '">&#128077; <span class="like-cnt">' + (cafe.like_count || 0) + '</span></button>' +
       '<button class="popup-btn popup-btn-route" data-lat="' + cafe.lat + '" data-lng="' + cafe.lng + '">ルート</button>' +
       '<button class="popup-btn popup-btn-edit" data-id="' + cafe.id + '">編集</button>' +
       '<button class="popup-btn popup-btn-delete" data-id="' + cafe.id + '">削除</button>' +
+    '</div>' +
+    '<div class="popup-comments" data-cafe-id="' + cafe.id + '">' +
+      '<div class="popup-comments-title">&#128172; コメント</div>' +
+      '<div class="popup-comments-list"></div>' +
+      '<div class="popup-comment-form">' +
+        '<input type="text" class="comment-nick" placeholder="名前" maxlength="20">' +
+        '<input type="text" class="comment-text" placeholder="コメントを入力..." maxlength="200">' +
+        '<button class="comment-submit" data-id="' + cafe.id + '">送信</button>' +
+      '</div>' +
     '</div>'
   );
 }
@@ -529,6 +576,33 @@ function addMarkerForCafe(cafe) {
 function renderAllCafes() {
   clearMarkers();
   cafes.forEach(addMarkerForCafe);
+}
+
+// ---- popup comments ----
+map.on('popupopen', function (e) {
+  var popup = e.popup;
+  var content = popup.getContent();
+  var match = content && content.match(/data-cafe-id="(\d+)"/);
+  if (!match) return;
+  var cafeId = parseInt(match[1], 10);
+  var container = popup.getElement().querySelector('.popup-comments-list');
+  if (!container) return;
+  container.innerHTML = '<div style="font-size:11px;color:#aaa">読み込み中...</div>';
+  fetchComments(cafeId).then(function (comments) {
+    if (!comments.length) {
+      container.innerHTML = '<div class="comments-empty">まだコメントはありません</div>';
+    } else {
+      container.innerHTML = comments.map(function (c) {
+        return '<div class="popup-comment"><span class="popup-comment-nick">' + escHtml(c.nickname) + '</span><span class="popup-comment-text">' + escHtml(c.text) + '</span></div>';
+      }).join('');
+    }
+  });
+});
+
+function escHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 // ---- current location ----
@@ -754,6 +828,38 @@ document.addEventListener('click', async function (e) {
     }
   }
 
+  if (t.classList.contains('popup-btn-like')) {
+    var id = parseInt(t.getAttribute('data-id'), 10);
+    incrementLikeCount(id).then(function () {
+      t.querySelector('.like-cnt').textContent = cafes.find(function (c) { return c.id === id; }).like_count;
+    });
+  }
+
+  if (t.classList.contains('comment-submit')) {
+    var cafeId = parseInt(t.getAttribute('data-id'), 10);
+    var form = t.parentNode;
+    var nick = form.querySelector('.comment-nick');
+    var text = form.querySelector('.comment-text');
+    if (!nick.value.trim()) { alert('名前を入力してください'); return; }
+    if (!text.value.trim()) { alert('コメントを入力してください'); return; }
+    insertComment(cafeId, nick.value.trim(), text.value.trim()).then(function () {
+      nick.value = ''; text.value = '';
+      var list = form.parentNode.querySelector('.popup-comments-list');
+      if (list) {
+        list.innerHTML = '<div style="font-size:11px;color:#aaa">読み込み中...</div>';
+        fetchComments(cafeId).then(function (comments) {
+          if (!comments.length) {
+            list.innerHTML = '<div class="comments-empty">まだコメントはありません</div>';
+          } else {
+            list.innerHTML = comments.map(function (c) {
+              return '<div class="popup-comment"><span class="popup-comment-nick">' + escHtml(c.nickname) + '</span><span class="popup-comment-text">' + escHtml(c.text) + '</span></div>';
+            }).join('');
+          }
+        });
+      }
+    });
+  }
+
   if (t.classList.contains('popup-btn-route')) {
     var lat = t.getAttribute('data-lat');
     var lng = t.getAttribute('data-lng');
@@ -913,6 +1019,7 @@ new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 // ---- changelog ----
 var CHANGELOG = [
+  { date: '2026-07-15', time: '14:00', text: '<b>コメント・いいね機能を追加</b><ul><li>各カフェに「いいね」ボタンを設置（カウント表示）</li><li>カフェごとにコメントの投稿・一覧表示が可能に</li><li>Supabase comments テーブルでデータ管理</li></ul>' },
   { date: '2026-07-14', time: '19:30', text: '<b>更新ログ機能を追加</b><ul><li>アプリ内に更新履歴を表示する更新ログモーダルを追加</li><li>開発者からのお知らせを確認可能に</li></ul>' },
   { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li><li>複数端末間でカフェデータを共有可能に</li><li>自動デプロイ設定（GitHub Actions）</li></ul>' },
   { date: '2026-07-14', time: '15:00', text: '<b>詳細情報を追加</b><ul><li>営業時間・Wi-Fi・電源・駐車場の入力欄を追加</li><li>ポップアップに上記4項目を表示</li><li>管理画面で3択選択（あり / なし / 不明）</li></ul>' },
