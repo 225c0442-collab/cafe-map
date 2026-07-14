@@ -913,11 +913,15 @@ new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 // ---- changelog ----
 var CHANGELOG = [
-  { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li><li>複数端末間でカフェデータを共有可能に</li></ul>' },
-  { date: '2026-07-14', time: '15:00', text: '<b>詳細情報を追加</b><ul><li>営業時間・Wi-Fi・電源・駐車場の入力欄を追加</li><li>ポップアップに上記4項目を表示</li></ul>' },
+  { date: '2026-07-14', time: '19:30', text: '<b>更新ログ機能を追加</b><ul><li>アプリ内に更新履歴を表示する更新ログモーダルを追加</li><li>開発者からのお知らせを確認可能に</li></ul>' },
+  { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li><li>複数端末間でカフェデータを共有可能に</li><li>自動デプロイ設定（GitHub Actions）</li></ul>' },
+  { date: '2026-07-14', time: '15:00', text: '<b>詳細情報を追加</b><ul><li>営業時間・Wi-Fi・電源・駐車場の入力欄を追加</li><li>ポップアップに上記4項目を表示</li><li>管理画面で3択選択（あり / なし / 不明）</li></ul>' },
+  { date: '2026-07-14', time: '12:00', text: '<b>Linux サーバーにデプロイ</b><ul><li>class.tama.net に公開</li><li>git clone でサーバー反映</li><li>GitHub との連携フロー確立</li></ul>' },
   { date: '2026-07-13', time: '20:00', text: '<b>便利機能を追加</b><ul><li>現在地表示（Geolocation API）</li><li>カフェ一覧サイドシート</li><li>検索ボックス（リアルタイムフィルター）</li><li>カテゴリタグ（電源あり / Wi-Fi完備 / テラス席 等）</li><li>JSON エクスポート / インポート</li><li>スターバックス5件を追加</li></ul>' },
-  { date: '2026-07-12', time: '14:00', text: '<b>編集・削除機能を追加</b><ul><li>ポップアップに編集・削除ボタンを追加</li><li>登録フォームの拡充</li><li>localStorage によるデータ永続化</li></ul>' },
-  { date: '2026-07-12', time: '10:00', text: '<b>カフェマップアプリ公開</b><ul><li>Leaflet を使った渋谷カフェマップ</li><li>サンプルカフェ5件を表示</li><li>地図クリックで住所自動取得</li><li>レスポンシブ対応</li></ul>' }
+  { date: '2026-07-13', time: '10:00', text: '<b>GitHub リポジトリ作成</b><ul><li>公開リポジトリ cafe-map を作成</li><li>初回コミット & プッシュ</li><li>ソースコード管理を開始</li></ul>' },
+  { date: '2026-07-12', time: '14:00', text: '<b>編集・削除機能を追加</b><ul><li>ポップアップに編集・削除ボタンを追加</li><li>登録フォームの拡充</li><li>localStorage によるデータ永続化</li><li>地図クリックで位置指定＋住所自動取得</li></ul>' },
+  { date: '2026-07-12', time: '10:00', text: '<b>カフェマップアプリ公開</b><ul><li>Leaflet を使った渋谷カフェマップ</li><li>サンプルカフェ5件を表示</li><li>カスタムマーカー（ドロップ型ピン）</li><li>新規登録フォーム</li><li>レスポンシブ対応（スマホ対応）</li></ul>' },
+  { date: '2026-07-11', time: '16:00', text: '<b>プロジェクト始動</b><ul><li>カフェマップアプリの開発を開始</li><li>技術スタックの選定（Leaflet / Supabase）</li><li>設計・要件定義</li></ul>' }
 ];
 
 function renderChangelog() {
