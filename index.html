@@ -290,6 +290,57 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
 }
 .changelog-text li { margin-left: 16px; }
 
+/* ===== auth bar ===== */
+.auth-bar {
+  position: fixed; top: 52px; left: 0; right: 0; z-index: 998;
+  background: #f8f9fa; border-bottom: 1px solid #e0e0e0;
+  padding: 6px 14px; min-height: 40px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.auth-input {
+  height: 30px; padding: 0 10px; border: 1px solid #ccc; border-radius: 6px;
+  font-size: 13px; outline: none; font-family: inherit;
+}
+.auth-input:focus { border-color: #d4a373; }
+.auth-input.username { width: 130px; }
+.auth-btn {
+  height: 30px; padding: 0 14px; border: none; border-radius: 6px;
+  cursor: pointer; font-size: 13px; font-weight: 600;
+  background: #d4a373; color: #fff; white-space: nowrap;
+}
+.auth-btn:hover { opacity: 0.85; }
+.auth-btn-out { background: #888; }
+.auth-link {
+  font-size: 12px; color: #888; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.auth-link:hover { color: #555; }
+.auth-error { font-size: 12px; color: #e74c3c; width: 100%; }
+.auth-user { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #555; }
+.auth-user strong { color: #333; }
+.auth-user .auth-email { color: #aaa; font-size: 12px; }
+.auth-hidden { display: none !important; }
+.auth-register-area { display: flex; align-items: center; gap: 6px; }
+
+/* ===== action log ===== */
+.action-log-item {
+  padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; line-height: 1.5;
+}
+.action-log-item:last-child { border-bottom: none; }
+.action-log-time { color: #aaa; font-size: 11px; }
+.action-log-user { color: #d4a373; font-weight: 700; }
+.action-log-empty { text-align: center; color: #aaa; padding: 30px 0; font-size: 13px; }
+.action-log-loading { text-align: center; color: #aaa; padding: 30px 0; font-size: 13px; }
+
+/* ===== auth state visibility ===== */
+body:not(.logged-in) .popup-btn-edit,
+body:not(.logged-in) .popup-btn-delete,
+body:not(.logged-in) .popup-comment-form,
+body:not(.logged-in) .popup-btn-like,
+body:not(.logged-in) .form-toggle { display: none !important; }
+
+.leaflet-top { top: 96px !important; }
+
 /* ===== responsive ===== */
 @media (max-width: 700px) {
   .list-panel { width: 100%; }
@@ -297,6 +348,9 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
   .header-btn { font-size: 11px; padding: 4px 8px; }
   .form-panel { padding: 14px 16px 20px; }
   .form-toggle { bottom: 14px; right: 14px; width: 48px; height: 48px; font-size: 24px; }
+  .auth-input { width: 100%; }
+  .auth-bar { padding: 6px 8px; gap: 4px; }
+  .leaflet-top { top: 110px !important; }
 }
 </style>
 </head>
@@ -306,9 +360,32 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
   <h1>&#9749; <span>Shibuya</span> Cafe Map</h1>
   <div class="header-actions">
     <button class="header-btn" id="changelogBtn">&#128196; 更新ログ</button>
+    <button class="header-btn" id="actionLogBtn">&#128203; 操作ログ</button>
     <button class="header-btn" id="exportBtn">&#128229; 出力</button>
     <button class="header-btn" id="importBtn">&#128228; 読込</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
+  </div>
+</div>
+
+<!-- auth bar -->
+<div class="auth-bar" id="authBar">
+  <div id="authNotLoggedIn">
+    <input type="email" id="authEmail" class="auth-input" placeholder="メールアドレス" autocomplete="email">
+    <input type="password" id="authPassword" class="auth-input" placeholder="パスワード" autocomplete="current-password">
+    <span id="authRegisterArea" class="auth-register-area auth-hidden">
+      <input type="text" id="authUsername" class="auth-input username" placeholder="ユーザーネーム">
+    </span>
+    <button class="auth-btn" id="authLoginBtn">ログイン</button>
+    <button class="auth-btn" id="authRegisterBtn">新規登録</button>
+    <span class="auth-link" id="authToggleLink">アカウントをお持ちでない方はこちら</span>
+    <div class="auth-error" id="authError"></div>
+  </div>
+  <div id="authLoggedIn" class="auth-hidden">
+    <div class="auth-user">
+      <strong id="authUsernameDisplay"></strong>
+      <span class="auth-email" id="authEmailDisplay"></span>
+      <button class="auth-btn auth-btn-out" id="authLogoutBtn">ログアウト</button>
+    </div>
   </div>
 </div>
 
@@ -386,6 +463,16 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
       <button class="modal-close" id="changelogClose">&times;</button>
     </div>
     <div class="modal-body" id="changelogBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="actionLogModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>&#128203; 操作ログ</h2>
+      <button class="modal-close" id="actionLogClose">&times;</button>
+    </div>
+    <div class="modal-body" id="actionLogBody"></div>
   </div>
 </div>
 
@@ -471,6 +558,7 @@ async function insertCafe(cafe) {
     like_count: cafe.like_count || 0
   }).select();
   if (error) { console.error(error); throw error; }
+  insertActionLog('を追加', cafe.name);
   return data[0];
 }
 
@@ -488,11 +576,16 @@ async function updateCafe(id, cafe) {
     tags: cafe.tags || []
   }).eq('id', id);
   if (error) { console.error(error); throw error; }
+  var cafe = cafes.find(function (c) { return c.id === id; });
+  if (cafe) insertActionLog('を編集', cafe.name);
 }
 
 async function deleteCafe(id) {
+  var cafe = cafes.find(function (c) { return c.id === id; });
+  var cafeName = cafe ? cafe.name : '';
   var { error } = await supabase.from('cafes').delete().eq('id', id);
   if (error) { console.error(error); throw error; }
+  if (cafeName) insertActionLog('を削除', cafeName);
 }
 
 async function fetchComments(cafeId) {
@@ -504,6 +597,8 @@ async function fetchComments(cafeId) {
 async function insertComment(cafeId, nickname, text) {
   var { data, error } = await supabase.from('comments').insert({ cafe_id: cafeId, nickname: nickname, text: text }).select();
   if (error) { console.error(error); throw error; }
+  var cafe = cafes.find(function (c) { return c.id === cafeId; });
+  if (cafe) insertActionLog('にコメント', cafe.name);
   return data[0];
 }
 
@@ -1033,6 +1128,7 @@ new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 // ---- changelog ----
 var CHANGELOG = [
+  { date: '2026-07-15', time: '16:00', text: '<b>会員登録・ログイン機能を追加</b><ul><li>メールアドレス＋パスワードでの会員登録・ログイン</li><li>ログイン中のみカフェ登録・編集・削除・コメントが可能に</li><li>操作ログ機能（誰がいつ何をしたか記録）</li><li>ユーザーネーム設定（重複不可）</li></ul>' },
   { date: '2026-07-15', time: '14:00', text: '<b>コメント・いいね機能を追加</b><ul><li>各カフェに「いいね」ボタンを設置（カウント表示）</li><li>カフェごとにコメントの投稿・一覧表示が可能に</li><li>Supabase comments テーブルでデータ管理</li></ul>' },
   { date: '2026-07-14', time: '19:30', text: '<b>更新ログ機能を追加</b><ul><li>アプリ内に更新履歴を表示する更新ログモーダルを追加</li><li>開発者からのお知らせを確認可能に</li></ul>' },
   { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li><li>複数端末間でカフェデータを共有可能に</li><li>自動デプロイ設定（GitHub Actions）</li></ul>' },
@@ -1063,6 +1159,198 @@ document.getElementById('changelogClose').addEventListener('click', function () 
 
 document.getElementById('changelogModal').addEventListener('click', function (e) {
   if (e.target === this) this.classList.remove('open');
+});
+
+// ---- auth ----
+var currentUsername = null;
+var currentEmail = null;
+var isRegisterMode = false;
+
+var authNotLoggedIn = document.getElementById('authNotLoggedIn');
+var authLoggedIn = document.getElementById('authLoggedIn');
+var authEmailInput = document.getElementById('authEmail');
+var authPasswordInput = document.getElementById('authPassword');
+var authUsernameInput = document.getElementById('authUsername');
+var authRegisterArea = document.getElementById('authRegisterArea');
+var authLoginBtn = document.getElementById('authLoginBtn');
+var authRegisterBtn = document.getElementById('authRegisterBtn');
+var authToggleLink = document.getElementById('authToggleLink');
+var authError = document.getElementById('authError');
+var authUsernameDisplay = document.getElementById('authUsernameDisplay');
+var authEmailDisplay = document.getElementById('authEmailDisplay');
+var authLogoutBtn = document.getElementById('authLogoutBtn');
+
+function authShowError(msg) { authError.textContent = msg; }
+function authClearError() { authError.textContent = ''; }
+
+function updateAuthUI(session) {
+  authClearError();
+  if (session) {
+    authNotLoggedIn.classList.add('auth-hidden');
+    authLoggedIn.classList.remove('auth-hidden');
+    var email = session.user.email;
+    currentEmail = email;
+    authEmailDisplay.textContent = email;
+    document.body.classList.add('logged-in');
+    // fetch username
+    supabase.from('profiles').select('username').eq('id', session.user.id).maybeSingle().then(function (res) {
+      if (res.data && res.data.username) {
+        currentUsername = res.data.username;
+        authUsernameDisplay.textContent = currentUsername;
+      }
+    });
+  } else {
+    authNotLoggedIn.classList.remove('auth-hidden');
+    authLoggedIn.classList.add('auth-hidden');
+    currentUsername = null;
+    currentEmail = null;
+    document.body.classList.remove('logged-in');
+  }
+}
+
+supabase.auth.onAuthStateChange(function (event, session) {
+  if (event === 'SIGNED_OUT') {
+    updateAuthUI(null);
+  } else if (session) {
+    updateAuthUI(session);
+  }
+});
+
+// toggle register / login mode
+authToggleLink.addEventListener('click', function () {
+  isRegisterMode = !isRegisterMode;
+  if (isRegisterMode) {
+    authRegisterArea.classList.remove('auth-hidden');
+    authLoginBtn.classList.add('auth-hidden');
+    authRegisterBtn.classList.remove('auth-hidden');
+    authToggleLink.textContent = 'すでにアカウントをお持ちの方はこちら';
+  } else {
+    authRegisterArea.classList.add('auth-hidden');
+    authLoginBtn.classList.remove('auth-hidden');
+    authRegisterBtn.classList.add('auth-hidden');
+    authToggleLink.textContent = 'アカウントをお持ちでない方はこちら';
+  }
+  authClearError();
+});
+
+// login
+authLoginBtn.addEventListener('click', async function () {
+  var email = authEmailInput.value.trim();
+  var password = authPasswordInput.value.trim();
+  if (!email) { authShowError('メールアドレスを入力してください'); return; }
+  if (!password) { authShowError('パスワードを入力してください'); return; }
+  authShowError('ログイン中...');
+  var res = await supabase.auth.signInWithPassword({ email: email, password: password });
+  if (res.error) { authShowError(res.error.message); return; }
+  authEmailInput.value = ''; authPasswordInput.value = '';
+  authClearError();
+});
+
+// register
+authRegisterBtn.addEventListener('click', async function () {
+  var email = authEmailInput.value.trim();
+  var password = authPasswordInput.value.trim();
+  var username = authUsernameInput.value.trim();
+  if (!email) { authShowError('メールアドレスを入力してください'); return; }
+  if (!password) { authShowError('パスワードを入力してください'); return; }
+  if (password.length < 6) { authShowError('パスワードは6文字以上で入力してください'); return; }
+  if (!username) { authShowError('ユーザーネームを入力してください'); return; }
+  // check username uniqueness
+  var { data: existing } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
+  if (existing) { authShowError('このユーザーネームは既に使用されています'); return; }
+  authShowError('登録中...');
+  var res = await supabase.auth.signUp({ email: email, password: password });
+  if (res.error) { authShowError(res.error.message); return; }
+  // insert profile
+  var uid = res.data.user.id;
+  var { error: profErr } = await supabase.from('profiles').insert({ id: uid, username: username });
+  if (profErr) { authShowError('プロフィール作成に失敗しました: ' + profErr.message); return; }
+  currentUsername = username;
+  authUsernameDisplay.textContent = username;
+  authEmailInput.value = ''; authPasswordInput.value = ''; authUsernameInput.value = '';
+  authClearError();
+});
+
+// logout
+authLogoutBtn.addEventListener('click', async function () {
+  await supabase.auth.signOut();
+});
+
+// ---- action log ----
+var actionLogBody = document.getElementById('actionLogBody');
+
+async function fetchActionLogs() {
+  var { data, error } = await supabase.from('action_log').select('*').order('created_at', { ascending: false }).limit(100);
+  if (error) { return []; }
+  return data || [];
+}
+
+async function insertActionLog(action, cafeName) {
+  if (!currentUsername) return;
+  await supabase.from('action_log').insert({
+    username: currentUsername,
+    action: action,
+    cafe_name: cafeName || ''
+  });
+}
+
+function renderActionLog() {
+  actionLogBody.innerHTML = '<div class="action-log-loading">読み込み中...</div>';
+  fetchActionLogs().then(function (logs) {
+    if (!logs || !logs.length) {
+      actionLogBody.innerHTML = '<div class="action-log-empty">まだ操作ログはありません</div>';
+      return;
+    }
+    actionLogBody.innerHTML = logs.map(function (l) {
+      var actionText = l.action;
+      var cafeText = l.cafe_name ? '「' + escHtml(l.cafe_name) + '」' : '';
+      var time = l.created_at ? new Date(l.created_at).toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+      return '<div class="action-log-item"><span class="action-log-user">' + escHtml(l.username) + '</span> が ' + cafeText + actionText + '<br><span class="action-log-time">' + time + '</span></div>';
+    }).join('');
+  });
+}
+
+document.getElementById('actionLogBtn').addEventListener('click', function () {
+  renderActionLog();
+  document.getElementById('actionLogModal').classList.add('open');
+});
+
+document.getElementById('actionLogClose').addEventListener('click', function () {
+  document.getElementById('actionLogModal').classList.remove('open');
+});
+
+document.getElementById('actionLogModal').addEventListener('click', function (e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+// ---- guard write operations behind login ----
+function requireLogin() {
+  if (!currentUsername) {
+    alert('ログインが必要です。画面上部の認証フォームからログインしてください。');
+    return false;
+  }
+  return true;
+}
+
+// modify openForm to check login
+var _origOpenForm = openForm;
+openForm = function () {
+  if (!requireLogin()) return;
+  _origOpenForm();
+};
+
+// modify map click to check login
+map.off('click');
+map.on('click', function (e) {
+  if (editingId !== null) {
+    if (!formPanel.classList.contains('open')) return;
+    cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6);
+    fetchAddress(e.latlng.lat, e.latlng.lng); return;
+  }
+  if (!requireLogin()) return;
+  if (!formPanel.classList.contains('open')) { setFormMode('add'); openForm(); }
+  cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6);
+  fetchAddress(e.latlng.lat, e.latlng.lng);
 });
 
 // ---- init ----
