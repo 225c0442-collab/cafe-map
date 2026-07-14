@@ -384,6 +384,10 @@ body:not(.logged-in) .form-toggle { display: none !important; }
     <div class="auth-user">
       <strong id="authUsernameDisplay"></strong>
       <span class="auth-email" id="authEmailDisplay"></span>
+      <span id="authUsernameSetup" class="auth-hidden">
+        <input type="text" id="authSetupUsername" class="auth-input username" placeholder="ユーザーネームを設定">
+        <button class="auth-btn" id="authSetupBtn">設定</button>
+      </span>
       <button class="auth-btn auth-btn-out" id="authLogoutBtn">ログアウト</button>
     </div>
   </div>
@@ -1194,9 +1198,31 @@ function updateAuthUI(session) {
     document.body.classList.add('logged-in');
     // fetch username
     supabase.from('profiles').select('username').eq('id', session.user.id).maybeSingle().then(function (res) {
+      var setup = document.getElementById('authUsernameSetup');
       if (res.data && res.data.username) {
         currentUsername = res.data.username;
         authUsernameDisplay.textContent = currentUsername;
+        authUsernameDisplay.classList.remove('auth-hidden');
+        setup.classList.add('auth-hidden');
+      } else {
+        // check for pending username (from registration with email confirmation)
+        var pending = sessionStorage.getItem('pendingUsername');
+        if (pending) {
+          sessionStorage.removeItem('pendingUsername');
+          supabase.from('profiles').insert({ id: session.user.id, username: pending }).then(function (ins) {
+            if (!ins.error) {
+              currentUsername = pending;
+              authUsernameDisplay.textContent = pending;
+              authUsernameDisplay.classList.remove('auth-hidden');
+              setup.classList.add('auth-hidden');
+              return;
+            }
+          });
+        }
+        if (!currentUsername) {
+          authUsernameDisplay.classList.add('auth-hidden');
+          setup.classList.remove('auth-hidden');
+        }
       }
     });
   } else {
@@ -1261,12 +1287,19 @@ authRegisterBtn.addEventListener('click', async function () {
   authShowError('登録中...');
   var res = await supabase.auth.signUp({ email: email, password: password });
   if (res.error) { authShowError(res.error.message); return; }
-  // insert profile
-  var uid = res.data.user.id;
-  var { error: profErr } = await supabase.from('profiles').insert({ id: uid, username: username });
-  if (profErr) { authShowError('プロフィール作成に失敗しました: ' + profErr.message); return; }
-  currentUsername = username;
-  authUsernameDisplay.textContent = username;
+  if (res.data.session) {
+    // auto-logged in (email confirmation disabled)
+    var uid = res.data.user.id;
+    var { error: profErr } = await supabase.from('profiles').insert({ id: uid, username: username });
+    if (profErr) { authShowError('プロフィール作成に失敗しました: ' + profErr.message); return; }
+    currentUsername = username;
+  } else {
+    // email confirmation required
+    // store username in sessionStorage for after confirmation
+    sessionStorage.setItem('pendingUsername', username);
+    authShowError('確認メールを送信しました。メール内のリンクをクリックしてからログインしてください。');
+    return;
+  }
   authEmailInput.value = ''; authPasswordInput.value = ''; authUsernameInput.value = '';
   authClearError();
 });
@@ -1274,6 +1307,12 @@ authRegisterBtn.addEventListener('click', async function () {
 // logout
 authLogoutBtn.addEventListener('click', async function () {
   await supabase.auth.signOut();
+});
+
+// username setup
+document.getElementById('authSetupBtn').addEventListener('click', function () {
+  var username = document.getElementById('authSetupUsername').value.trim();
+  setupUsername(username);
 });
 
 // ---- action log ----
@@ -1325,11 +1364,27 @@ document.getElementById('actionLogModal').addEventListener('click', function (e)
 
 // ---- guard write operations behind login ----
 function requireLogin() {
-  if (!currentUsername) {
+  if (!currentEmail) {
     alert('ログインが必要です。画面上部の認証フォームからログインしてください。');
     return false;
   }
   return true;
+}
+
+// username setup (for users who logged in without a profile yet)
+async function setupUsername(username) {
+  if (!username) { alert('ユーザーネームを入力してください'); return; }
+  var { data: existing } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
+  if (existing) { alert('このユーザーネームは既に使用されています'); return; }
+  var { data: sessData } = await supabase.auth.getSession();
+  var uid = sessData?.session?.user?.id;
+  if (!uid) { alert('セッションが見つかりません。再ログインしてください。'); return; }
+  var { error } = await supabase.from('profiles').insert({ id: uid, username: username });
+  if (error) { alert('ユーザーネームの設定に失敗しました: ' + error.message); return; }
+  currentUsername = username;
+  authUsernameDisplay.textContent = username;
+  authUsernameDisplay.classList.remove('auth-hidden');
+  document.getElementById('authUsernameSetup').classList.add('auth-hidden');
 }
 
 // modify openForm to check login
