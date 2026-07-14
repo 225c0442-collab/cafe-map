@@ -117,6 +117,12 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
 .popup-name { font-size: 15px; font-weight: 700; color: #333; margin-bottom: 2px; }
 .popup-addr { font-size: 12px; color: #999; margin-bottom: 4px; }
 .popup-desc { font-size: 13px; color: #555; }
+.popup-detail { display: flex; flex-direction: column; gap: 3px; margin: 6px 0; }
+.popup-detail-row { font-size: 12px; color: #555; display: flex; align-items: center; gap: 6px; }
+.popup-detail-row .val { font-weight: 600; }
+.popup-detail-row .val.yes { color: #27ae60; }
+.popup-detail-row .val.no { color: #e74c3c; }
+.popup-detail-row .val.unknown { color: #999; }
 .popup-tags { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
 .popup-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
 .popup-btn {
@@ -191,6 +197,16 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
 .form-group textarea { resize: vertical; min-height: 48px; }
 .form-row { display: flex; gap: 10px; }
 .form-row .form-group { flex: 1; }
+.form-radio-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.form-radio-opt {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 12px; border: 1px solid #ddd;
+  font-size: 11px; cursor: pointer; background: #fff; color: #666;
+  transition: all 0.2s; user-select: none;
+}
+.form-radio-opt:hover { border-color: #d4a373; }
+.form-radio-opt input { display: none; }
+.form-radio-opt.selected { border-color: #d4a373; background: #faf7f3; color: #d4a373; }
 .form-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 .form-tag-opt {
   display: inline-flex; align-items: center; gap: 4px;
@@ -283,6 +299,22 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
     <textarea id="cafeDesc" placeholder="例：落ち着いた雰囲気でゆったり過ごせる定番カフェ"></textarea>
   </div>
   <div class="form-group">
+    <label>営業時間（任意）</label>
+    <input type="text" id="cafeHours" placeholder="例：9:00〜18:00">
+  </div>
+  <div class="form-group">
+    <label>Wi-Fi</label>
+    <div class="form-radio-group" data-field="wifi"></div>
+  </div>
+  <div class="form-group">
+    <label>電源</label>
+    <div class="form-radio-group" data-field="power"></div>
+  </div>
+  <div class="form-group">
+    <label>駐車場</label>
+    <div class="form-radio-group" data-field="parking"></div>
+  </div>
+  <div class="form-group">
     <label>タグ（任意）</label>
     <div class="form-tags" id="formTags"></div>
   </div>
@@ -293,30 +325,20 @@ html, body { height: 100%; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku 
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://nwlfxjtunbqjkwpiaury.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_8qruRB407zLYrCBgVxlobA_VJxAQML1';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const TAG_LABELS = {
   power: '電源あり', wifi: 'Wi-Fi完備', terrace: 'テラス席',
   pet: 'ペット可', smoking: '喫煙可', quiet: '静かな空間'
 };
 const TAG_KEYS = Object.keys(TAG_LABELS);
 
-const SAMPLE_CAFES = [
-  { id: 1, name: 'カフェ・ド・クリエ 渋谷店', lat: 35.6598, lng: 139.7012, address: '東京都渋谷区道玄坂1-2-3', desc: '落ち着いた雰囲気でゆったり過ごせる定番カフェ', tags: ['wifi', 'quiet'] },
-  { id: 2, name: 'ABOUT LIFE COFFEE BREWERS', lat: 35.6614, lng: 139.6994, address: '東京都渋谷区道玄坂1-19-8', desc: 'スペシャルティコーヒーが楽しめる人気のスタンド', tags: [] },
-  { id: 3, name: 'Fuglen Tokyo', lat: 35.6628, lng: 139.7070, address: '東京都渋谷区富ヶ谷1-16-11', desc: '北欧家具に囲まれたおしゃれな空間で本格コーヒー', tags: ['terrace'] },
-  { id: 4, name: 'ストリーマーコーヒーカンパニー', lat: 35.6605, lng: 139.6968, address: '東京都渋谷区渋谷1-20-28', desc: '焙煎したての豆で淹れる絶品ラテが自慢', tags: ['wifi'] },
-  { id: 5, name: 'ブルーボトルコーヒー 渋谷カフェ', lat: 35.6580, lng: 139.7030, address: '東京都渋谷区神南1-7-3', desc: '洗練された空間でシングルオリジンコーヒーを堪能', tags: ['quiet'] },
-  { id: 6, name: 'スターバックス リザーブ ロースタリー 東京', lat: 35.6510, lng: 139.6995, address: '東京都目黒区青葉台2-19-23', desc: '世界最大級のスターバックス。焙煎体験もできる', tags: ['wifi', 'power', 'terrace'] },
-  { id: 7, name: 'スターバックス 渋谷スクランブルスクエア店', lat: 35.6595, lng: 139.7008, address: '東京都渋谷区渋谷2-24-12', desc: '渋谷のど真ん中、スクランブル交差点を見下ろす絶景カフェ', tags: ['wifi', 'power'] },
-  { id: 8, name: 'スターバックス 渋谷マークシティ店', lat: 35.6585, lng: 139.6995, address: '東京都渋谷区道玄坂1-12-1', desc: 'マークシティ内のゆったりとしたスターバックス', tags: ['wifi'] },
-  { id: 9, name: 'スターバックス SHIBUYA TSUTAYA店', lat: 35.6602, lng: 139.6995, address: '東京都渋谷区宇田川町21-6', desc: 'TSUTAYA併設。本を読みながらコーヒーを楽しめる', tags: ['wifi', 'power', 'quiet'] },
-  { id: 10, name: 'スターバックス 渋谷ヒカリエ店', lat: 35.6590, lng: 139.7035, address: '東京都渋谷区渋谷2-21-1', desc: 'ヒカリエShinQs内の明るく開放的なくつろぎ空間', tags: ['wifi'] }
-];
-
-const STORAGE_KEY = 'cafe_map_data';
-
 let cafes = [];
-let nextId = 11;
 let editingId = null;
 let activeTagFilter = null;
 let searchQuery = '';
@@ -343,33 +365,101 @@ const allMarkers = [];
 var currentLocMarker = null;
 var currentLocCircle = null;
 
-// ---- data persistence ----
-function loadCafes() {
-  var stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    cafes = JSON.parse(stored);
-    cafes.forEach(function (c) { if (!c.tags) c.tags = []; });
-    nextId = cafes.reduce(function (max, c) { return Math.max(max, c.id || 0); }, 0) + 1;
-  } else {
-    cafes = JSON.parse(JSON.stringify(SAMPLE_CAFES));
-    saveCafes();
-  }
+// ---- Supabase CRUD ----
+function toCafe(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    address: row.address,
+    lat: row.lat,
+    lng: row.lng,
+    desc: row.comment || '',
+    hours: row.hours || '',
+    wifi: row.wifi === null ? null : !!row.wifi,
+    power: row.power === null ? null : !!row.power,
+    parking: row.parking === null ? null : !!row.parking,
+    tags: row.tags || []
+  };
 }
-function saveCafes() { localStorage.setItem(STORAGE_KEY, JSON.stringify(cafes)); }
+
+async function fetchCafes() {
+  var { data, error } = await supabase.from('cafes').select('*').order('id');
+  if (error) { console.error(error); return; }
+  cafes = (data || []).map(toCafe);
+  renderAllCafes();
+  renderList();
+}
+
+async function insertCafe(cafe) {
+  var { data, error } = await supabase.from('cafes').insert({
+    name: cafe.name,
+    address: cafe.address,
+    lat: cafe.lat,
+    lng: cafe.lng,
+    comment: cafe.desc,
+    hours: cafe.hours,
+    wifi: cafe.wifi,
+    power: cafe.power,
+    parking: cafe.parking,
+    tags: cafe.tags || []
+  }).select();
+  if (error) { console.error(error); throw error; }
+  return data[0];
+}
+
+async function updateCafe(id, cafe) {
+  var { error } = await supabase.from('cafes').update({
+    name: cafe.name,
+    address: cafe.address,
+    lat: cafe.lat,
+    lng: cafe.lng,
+    comment: cafe.desc,
+    hours: cafe.hours,
+    wifi: cafe.wifi,
+    power: cafe.power,
+    parking: cafe.parking,
+    tags: cafe.tags || []
+  }).eq('id', id);
+  if (error) { console.error(error); throw error; }
+}
+
+async function deleteCafe(id) {
+  var { error } = await supabase.from('cafes').delete().eq('id', id);
+  if (error) { console.error(error); throw error; }
+}
 
 // ---- markers ----
 function clearMarkers() {
   allMarkers.forEach(function (m) { map.removeLayer(m); });
   allMarkers.length = 0;
 }
+
+function boolHtml(label, val) {
+  var cls, txt;
+  if (val === true) { cls = 'yes'; txt = 'あり'; }
+  else if (val === false) { cls = 'no'; txt = 'なし'; }
+  else { cls = 'unknown'; txt = '不明'; }
+  return '<div class="popup-detail-row">' + label + ': <span class="val ' + cls + '">' + txt + '</span></div>';
+}
+
 function makePopupContent(cafe) {
   var tagsHtml = '';
   if (cafe.tags && cafe.tags.length) {
     tagsHtml = '<div class="popup-tags">' + cafe.tags.map(function (t) { return '<span class="tag tag-' + t + '">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + '</div>';
   }
+  var detailHtml = '';
+  if (cafe.hours || cafe.wifi !== undefined || cafe.power !== undefined || cafe.parking !== undefined) {
+    detailHtml = '<div class="popup-detail">';
+    if (cafe.hours) detailHtml += '<div class="popup-detail-row">&#128338; ' + cafe.hours + '</div>';
+    if (cafe.wifi !== undefined) detailHtml += boolHtml('&#128246; Wi-Fi', cafe.wifi);
+    if (cafe.power !== undefined) detailHtml += boolHtml('&#128268; 電源', cafe.power);
+    if (cafe.parking !== undefined) detailHtml += boolHtml('&#128663; 駐車場', cafe.parking);
+    detailHtml += '</div>';
+  }
   return (
     '<div class="popup-name">' + cafe.name + '</div>' +
     tagsHtml +
+    detailHtml +
     '<div class="popup-addr">' + cafe.address + '</div>' +
     '<div class="popup-desc">' + cafe.desc + '</div>' +
     '<div class="popup-actions">' +
@@ -379,12 +469,14 @@ function makePopupContent(cafe) {
     '</div>'
   );
 }
+
 function addMarkerForCafe(cafe) {
   var marker = L.marker([cafe.lat, cafe.lng], { icon: iconForCafe(cafe) }).addTo(map);
   marker.bindPopup(makePopupContent(cafe));
   marker._cafeId = cafe.id;
   allMarkers.push(marker);
 }
+
 function renderAllCafes() {
   clearMarkers();
   cafes.forEach(addMarkerForCafe);
@@ -399,18 +491,15 @@ function showCurrentLocation() {
       var lng = pos.coords.longitude;
       if (currentLocMarker) { map.removeLayer(currentLocMarker); }
       if (currentLocCircle) { map.removeLayer(currentLocCircle); }
-
       currentLocCircle = L.circleMarker([lat, lng], {
         radius: 40, color: '#4285f4', fillColor: 'rgba(66,133,244,0.15)', fillOpacity: 0.3, weight: 1
       }).addTo(map);
-
       currentLocMarker = L.marker([lat, lng], {
         icon: L.divIcon({
           className: '', html: '<div style="position:relative"><div class="current-loc-pulse"></div><div class="current-loc-marker"></div></div>',
           iconSize: [24, 24], iconAnchor: [12, 12]
         })
       }).addTo(map);
-
       map.setView([lat, lng], map.getZoom());
     },
     function () { alert('現在地を取得できませんでした'); },
@@ -446,11 +535,46 @@ var cafeAddress = document.getElementById('cafeAddress');
 var cafeLat = document.getElementById('cafeLat');
 var cafeLng = document.getElementById('cafeLng');
 var cafeDesc = document.getElementById('cafeDesc');
+var cafeHours = document.getElementById('cafeHours');
 var formTagsEl = document.getElementById('formTags');
 var hint = document.getElementById('hint');
 var submitting = false;
 
-// build tag checkboxes
+var BOOL_FIELDS = ['wifi', 'power', 'parking'];
+BOOL_FIELDS.forEach(function (field) {
+  var container = document.querySelector('.form-radio-group[data-field="' + field + '"]');
+  if (!container) return;
+  [null, true, false].forEach(function (val) {
+    var label = document.createElement('label');
+    label.className = 'form-radio-opt';
+    var text = val === null ? '不明' : val ? 'あり' : 'なし';
+    label.innerHTML = '<input type="radio" name="' + field + '" value="' + val + '">' + text;
+    container.appendChild(label);
+    label.addEventListener('click', function (e) {
+      if (e.target.tagName !== 'INPUT') {
+        var rb = label.querySelector('input'); rb.checked = true;
+      }
+      container.querySelectorAll('.form-radio-opt').forEach(function (l) { l.classList.toggle('selected', l.querySelector('input').checked); });
+    });
+  });
+});
+
+function getRadioValue(field) {
+  var checked = document.querySelector('.form-radio-group[data-field="' + field + '"] input:checked');
+  if (!checked) return null;
+  return checked.value === 'true' ? true : checked.value === 'false' ? false : null;
+}
+
+function setRadioValue(field, val) {
+  var container = document.querySelector('.form-radio-group[data-field="' + field + '"]');
+  if (!container) return;
+  container.querySelectorAll('input').forEach(function (i) {
+    var match = (val === true && i.value === 'true') || (val === false && i.value === 'false') || (val === null && i.value === 'null');
+    i.checked = match;
+    i.parentNode.classList.toggle('selected', match);
+  });
+}
+
 TAG_KEYS.forEach(function (key) {
   var label = document.createElement('label');
   label.className = 'form-tag-opt';
@@ -465,7 +589,8 @@ function getSelectedTags() {
 
 function resetFormFields() {
   cafeName.value = ''; cafeAddress.value = ''; cafeLat.value = '';
-  cafeLng.value = ''; cafeDesc.value = '';
+  cafeLng.value = ''; cafeDesc.value = ''; cafeHours.value = '';
+  BOOL_FIELDS.forEach(function (f) { setRadioValue(f, null); });
   formTagsEl.querySelectorAll('input').forEach(function (i) { i.checked = false; });
   formTagsEl.querySelectorAll('.form-tag-opt').forEach(function (l) { l.classList.remove('selected'); });
 }
@@ -477,6 +602,8 @@ function setFormMode(mode, cafe) {
     formSubmit.textContent = '更新する';
     cafeName.value = cafe.name; cafeAddress.value = cafe.address;
     cafeLat.value = cafe.lat; cafeLng.value = cafe.lng; cafeDesc.value = cafe.desc;
+    cafeHours.value = cafe.hours || '';
+    BOOL_FIELDS.forEach(function (f) { setRadioValue(f, cafe[f] !== undefined ? cafe[f] : null); });
     formTagsEl.querySelectorAll('input').forEach(function (i) {
       i.checked = (cafe.tags || []).indexOf(i.value) !== -1;
       i.parentNode.classList.toggle('selected', i.checked);
@@ -518,7 +645,7 @@ map.on('click', function (e) {
   fetchAddress(e.latlng.lat, e.latlng.lng);
 });
 
-formSubmit.addEventListener('click', function () {
+formSubmit.addEventListener('click', async function () {
   var name = cafeName.value.trim();
   var address = cafeAddress.value.trim();
   var lat = parseFloat(cafeLat.value);
@@ -532,24 +659,31 @@ formSubmit.addEventListener('click', function () {
   if (isNaN(lng) || lng < -180 || lng > 180) { alert('正しい経度を入力してください'); return; }
   if (!desc) { alert('一言コメントを入力してください'); return; }
 
-  if (editingId !== null) {
-    for (var i = 0; i < cafes.length; i++) {
-      if (cafes[i].id === editingId) {
-        cafes[i].name = name; cafes[i].address = address;
-        cafes[i].lat = lat; cafes[i].lng = lng;
-        cafes[i].desc = desc; cafes[i].tags = tags; break;
-      }
-    }
-  } else {
-    cafes.push({ id: nextId++, name: name, address: address, lat: lat, lng: lng, desc: desc, tags: tags });
-  }
+  var hours = cafeHours.value.trim();
+  var wifi = getRadioValue('wifi');
+  var power = getRadioValue('power');
+  var parking = getRadioValue('parking');
 
-  saveCafes(); renderAllCafes(); renderList();
-  setFormMode('add'); submitting = true; closeForm();
+  var cafeData = { name: name, address: address, lat: lat, lng: lng, desc: desc, hours: hours, wifi: wifi, power: power, parking: parking, tags: tags };
+
+  try {
+    if (editingId !== null) {
+      await updateCafe(editingId, cafeData);
+      var found = cafes.find(function (c) { return c.id === editingId; });
+      if (found) { Object.assign(found, cafeData); }
+    } else {
+      var inserted = await insertCafe(cafeData);
+      cafes.push(toCafe(inserted));
+    }
+    renderAllCafes(); renderList();
+    setFormMode('add'); submitting = true; closeForm();
+  } catch (err) {
+    alert('保存に失敗しました: ' + err.message);
+  }
 });
 
 // ---- popup actions (delegation) ----
-document.addEventListener('click', function (e) {
+document.addEventListener('click', async function (e) {
   var t = e.target;
 
   if (t.classList.contains('popup-btn-edit')) {
@@ -562,8 +696,13 @@ document.addEventListener('click', function (e) {
   if (t.classList.contains('popup-btn-delete')) {
     var id = parseInt(t.getAttribute('data-id'), 10);
     if (!confirm('「' + t.parentNode.parentNode.querySelector('.popup-name').textContent + '」を削除してもよろしいですか？')) return;
-    cafes = cafes.filter(function (c) { return c.id !== id; });
-    saveCafes(); renderAllCafes(); renderList(); map.closePopup();
+    try {
+      await deleteCafe(id);
+      cafes = cafes.filter(function (c) { return c.id !== id; });
+      renderAllCafes(); renderList(); map.closePopup();
+    } catch (err) {
+      alert('削除に失敗しました: ' + err.message);
+    }
   }
 
   if (t.classList.contains('popup-btn-route')) {
@@ -580,7 +719,6 @@ var listItems = document.getElementById('listItems');
 var searchBox = document.getElementById('searchBox');
 var tagFiltersEl = document.getElementById('tagFilters');
 
-// build tag filter chips
 TAG_KEYS.forEach(function (key) {
   var chip = document.createElement('span');
   chip.className = 'tag-filter-chip';
@@ -679,20 +817,32 @@ document.getElementById('importBtn').addEventListener('click', function () {
   document.getElementById('importFile').click();
 });
 
-document.getElementById('importFile').addEventListener('change', function (e) {
+document.getElementById('importFile').addEventListener('change', async function (e) {
   var file = e.target.files[0];
   if (!file) return;
   var reader = new FileReader();
-  reader.onload = function (ev) {
+  reader.onload = async function (ev) {
     try {
       var data = JSON.parse(ev.target.result);
       if (!Array.isArray(data)) { alert('不正なファイル形式です'); return; }
       if (!confirm('データを読み込むと現在のデータは上書きされます。よろしいですか？')) return;
-      data.forEach(function (c) { if (!c.tags) c.tags = []; });
-      cafes = data;
-      nextId = cafes.reduce(function (max, c) { return Math.max(max, c.id || 0); }, 0) + 1;
-      saveCafes(); renderAllCafes(); renderList();
-      alert('データを読み込みました（' + cafes.length + '件）');
+
+      var { error } = await supabase.from('cafes').delete().neq('id', 0);
+      if (error) { alert('削除に失敗しました'); return; }
+
+      for (var i = 0; i < data.length; i++) {
+        var c = data[i];
+        var { error: insErr } = await supabase.from('cafes').insert({
+          name: c.name, address: c.address, lat: c.lat, lng: c.lng,
+          comment: c.desc || c.comment || '',
+          hours: c.hours || '', wifi: c.wifi, power: c.power, parking: c.parking,
+          tags: c.tags || []
+        });
+        if (insErr) { console.error(insErr); }
+      }
+
+      await fetchCafes();
+      alert('データを読み込みました（' + data.length + '件）');
     } catch (err) { alert('ファイルの読み込みに失敗しました'); }
   };
   reader.readAsText(file);
@@ -713,9 +863,7 @@ L.Control.CurrentLocation = L.Control.extend({
 new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 // ---- init ----
-loadCafes();
-renderAllCafes();
-renderList();
+await fetchCafes();
 </script>
 </body>
 </html>
