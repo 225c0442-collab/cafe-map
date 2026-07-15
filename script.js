@@ -46,6 +46,7 @@ function iconForCafe(cafe) {
 const allMarkers = [];
 var currentLocMarker = null;
 var currentLocCircle = null;
+var tempPreviewMarker = null;
 
 function toCafe(row) {
   return {
@@ -328,6 +329,17 @@ function resetFormFields() {
   formTagsEl.querySelectorAll('.form-tag-opt').forEach(function (l) { l.classList.remove('selected'); });
 }
 
+function updateTempPreviewMarker(lat, lng) {
+  if (tempPreviewMarker) { map.removeLayer(tempPreviewMarker); }
+  tempPreviewMarker = L.marker([lat, lng], {
+    icon: L.divIcon({ className: '', html: '<div class="custom-marker preview-marker"><div class="custom-marker-inner"></div></div>', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -38] })
+  }).addTo(map);
+}
+
+function removeTempPreviewMarker() {
+  if (tempPreviewMarker) { map.removeLayer(tempPreviewMarker); tempPreviewMarker = null; }
+}
+
 function setFormMode(mode, cafe) {
   if (mode === 'edit' && cafe) {
     editingId = cafe.id; formTitle.textContent = 'カフェを編集'; formSubmit.textContent = '更新する';
@@ -351,7 +363,7 @@ function closeForm() {
   formPanel.classList.remove('open'); formToggle.classList.remove('open');
   formToggle.innerHTML = '+'; hint.classList.remove('show');
   if (!submitting) { setFormMode('add'); }
-  submitting = false;
+  submitting = false; removeTempPreviewMarker();
 }
 
 formToggle.addEventListener('click', function () {
@@ -362,10 +374,10 @@ formCancel.addEventListener('click', function () { setFormMode('add'); closeForm
 map.on('click', function (e) {
   if (editingId !== null) {
     if (!formPanel.classList.contains('open')) return;
-    cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6); fetchAddress(e.latlng.lat, e.latlng.lng); return;
+    cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6); fetchAddress(e.latlng.lat, e.latlng.lng); updateTempPreviewMarker(e.latlng.lat, e.latlng.lng); return;
   }
   if (!formPanel.classList.contains('open')) { setFormMode('add'); openForm(); }
-  cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6); fetchAddress(e.latlng.lat, e.latlng.lng);
+  cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6); fetchAddress(e.latlng.lat, e.latlng.lng); updateTempPreviewMarker(e.latlng.lat, e.latlng.lng);
 });
 
 formSubmit.addEventListener('click', async function () {
@@ -783,11 +795,11 @@ map.off('click');
 map.on('click', function (e) {
   if (editingId !== null) {
     if (!formPanel.classList.contains('open')) return;
-    cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6); fetchAddress(e.latlng.lat, e.latlng.lng); return;
+    cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6); fetchAddress(e.latlng.lat, e.latlng.lng); updateTempPreviewMarker(e.latlng.lat, e.latlng.lng); return;
   }
   if (!requireLogin()) return;
   if (!formPanel.classList.contains('open')) { setFormMode('add'); openForm(); }
-  cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6); fetchAddress(e.latlng.lat, e.latlng.lng);
+  cafeLat.value = e.latlng.lat.toFixed(6); cafeLng.value = e.latlng.lng.toFixed(6); fetchAddress(e.latlng.lat, e.latlng.lng); updateTempPreviewMarker(e.latlng.lat, e.latlng.lng);
 });
 
 await fetchCafes();
