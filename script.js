@@ -116,12 +116,24 @@ async function insertComment(cafeId, nickname, text) {
   return data[0];
 }
 
-async function incrementLikeCount(id) {
-  var cafe = cafes.find(function (c) { return c.id === id; });
-  var current = cafe ? cafe.like_count : 0;
-  var { error } = await supabase.from('cafes').update({ like_count: current + 1 }).eq('id', id);
-  if (error) { console.error(error); throw error; }
-  if (cafe) cafe.like_count = current + 1;
+async function toggleLike(cafeId) {
+  var cafe = cafes.find(function (c) { return c.id === cafeId; });
+  if (!cafe) return { liked: false, count: 0 };
+  var { data: existing } = await supabase.from('likes').select('id').eq('user_id', currentUserId).eq('cafe_id', cafeId).maybeSingle();
+  if (existing) {
+    var { error: delErr } = await supabase.from('likes').delete().eq('id', existing.id);
+    if (delErr) throw delErr;
+    cafe.like_count = Math.max(0, (cafe.like_count || 0) - 1);
+    await supabase.from('cafes').update({ like_count: cafe.like_count }).eq('id', cafeId);
+    return { liked: false, count: cafe.like_count };
+  } else {
+    var { error: insErr } = await supabase.from('likes').insert({ user_id: currentUserId, cafe_id: cafeId });
+    if (insErr) throw insErr;
+    cafe.like_count = (cafe.like_count || 0) + 1;
+    await supabase.from('cafes').update({ like_count: cafe.like_count }).eq('id', cafeId);
+    insertActionLog('にいいね', cafe.name);
+    return { liked: true, count: cafe.like_count };
+  }
 }
 
 function clearMarkers() {
@@ -191,6 +203,14 @@ map.on('popupopen', function (e) {
   var match = content && content.match(/data-cafe-id="(\d+)"/);
   if (!match) return;
   var cafeId = parseInt(match[1], 10);
+  if (currentUserId) {
+    supabase.from('likes').select('id').eq('user_id', currentUserId).eq('cafe_id', cafeId).maybeSingle().then(function (res) {
+      if (res.data) {
+        var likeBtn = popup.getElement().querySelector('.popup-btn-like');
+        if (likeBtn) likeBtn.classList.add('liked');
+      }
+    });
+  }
   var container = popup.getElement().querySelector('.popup-comments-list');
   if (!container) return;
   container.innerHTML = '<div style="font-size:11px;color:#8c7e73;text-align:center;">読み込み中...</div>';
@@ -397,11 +417,11 @@ document.addEventListener('click', async function (e) {
   if (t.classList.contains('popup-btn-like')) {
     if (!requireLogin()) return;
     var id = parseInt(t.getAttribute('data-id'), 10);
-    incrementLikeCount(id).then(function () {
-      t.querySelector('.like-cnt').textContent = cafes.find(function (c) { return c.id === id; }).like_count;
-      showToast('いいね！しました');
-    }).catch(function (err) {
-      console.error('Like failed:', err);
+    toggleLike(id).then(function (res) {
+      t.querySelector('.like-cnt').textContent = res.count;
+      t.classList.toggle('liked', res.liked);
+      showToast(res.liked ? 'いいね！しました' : 'いいねを取り消しました');
+    }).catch(function () {
       showToast('いいねに失敗しました');
     });
   }
@@ -546,7 +566,7 @@ document.getElementById('changelogBtn').addEventListener('click', function () { 
 document.getElementById('changelogClose').addEventListener('click', function () { document.getElementById('changelogModal').classList.remove('open'); });
 document.getElementById('changelogModal').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
 
-var currentUsername = null; var currentEmail = null; var isRegisterMode = false;
+var currentUserId = null; var currentUsername = null; var currentEmail = null; var isRegisterMode = false;
 var authNotLoggedIn = document.getElementById('authNotLoggedIn'); var authLoggedIn = document.getElementById('authLoggedIn');
 var authEmailInput = document.getElementById('authEmail'); var authPasswordInput = document.getElementById('authPassword');
 var authUsernameInput = document.getElementById('authUsername'); var authRegisterArea = document.getElementById('authRegisterArea');
@@ -561,8 +581,7 @@ function updateAuthUI(session) {
   authClearError();
   if (session) {
     authNotLoggedIn.classList.add('auth-hidden'); authLoggedIn.classList.remove('auth-hidden');
-    currentEmail = session.user.email; authEmailDisplay.textContent = currentEmail; document.body.classList.add('logged-in');
-    // show email prefix immediately (before async profile fetch)
+    currentUserId = session.user.id; currentEmail = session.user.email; authEmailDisplay.textContent = currentEmail; document.body.classList.add('logged-in');
     var prefix = currentEmail ? currentEmail.split('@')[0] : '';
     authGreeting.textContent = 'こんにちは、' + prefix + 'さん';
     supabase.from('profiles').select('username').eq('id', session.user.id).maybeSingle().then(function (res) {
@@ -585,13 +604,22 @@ function updateAuthUI(session) {
           });
         }
         if (!currentUsername) {
-          authUsernameDisplay.classList.add('auth-hidden'); setup.classList.remove('auth-hidden');
+          var suggested = currentEmail ? currentEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : 'user';
+          supabase.from('profiles').insert({ id: session.user.id, username: suggested }).then(function (ins) {
+            if (!ins.error) {
+              currentUsername = suggested; authUsernameDisplay.textContent = suggested;
+              authUsernameDisplay.classList.remove('auth-hidden'); setup.classList.add('auth-hidden');
+              authGreeting.textContent = 'こんにちは、' + suggested + 'さん';
+            } else {
+              authUsernameDisplay.classList.add('auth-hidden'); setup.classList.remove('auth-hidden');
+            }
+          });
         }
       }
     });
   } else {
     authNotLoggedIn.classList.remove('auth-hidden'); authLoggedIn.classList.add('auth-hidden');
-    currentUsername = null; currentEmail = null; document.body.classList.remove('logged-in');
+    currentUserId = null; currentUsername = null; currentEmail = null; document.body.classList.remove('logged-in');
     authGreeting.textContent = 'こんにちは、ゲストさん';
   }
 }
