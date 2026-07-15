@@ -400,7 +400,10 @@ document.addEventListener('click', async function (e) {
     incrementLikeCount(id).then(function () {
       t.querySelector('.like-cnt').textContent = cafes.find(function (c) { return c.id === id; }).like_count;
       showToast('いいね！しました');
-    }).catch(function (err) { showToast('いいねに失敗しました'); });
+    }).catch(function (err) {
+      console.error('Like failed:', err);
+      showToast('いいねに失敗しました');
+    });
   }
   if (t.classList.contains('comment-submit')) {
     if (!requireLogin()) return;
