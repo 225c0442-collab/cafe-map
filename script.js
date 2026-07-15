@@ -559,13 +559,15 @@ function updateAuthUI(session) {
   if (session) {
     authNotLoggedIn.classList.add('auth-hidden'); authLoggedIn.classList.remove('auth-hidden');
     currentEmail = session.user.email; authEmailDisplay.textContent = currentEmail; document.body.classList.add('logged-in');
+    // show email prefix immediately (before async profile fetch)
+    var prefix = currentEmail ? currentEmail.split('@')[0] : '';
+    authGreeting.textContent = 'こんにちは、' + prefix + 'さん';
     supabase.from('profiles').select('username').eq('id', session.user.id).maybeSingle().then(function (res) {
       var setup = document.getElementById('authUsernameSetup');
       if (res.data && res.data.username) {
         currentUsername = res.data.username; authUsernameDisplay.textContent = currentUsername;
         authUsernameDisplay.classList.remove('auth-hidden'); setup.classList.add('auth-hidden');
         authGreeting.textContent = 'こんにちは、' + currentUsername + 'さん';
-        showToast('ログインしました。');
       } else {
         var pending = sessionStorage.getItem('pendingUsername');
         if (pending) {
@@ -575,13 +577,12 @@ function updateAuthUI(session) {
               currentUsername = pending; authUsernameDisplay.textContent = pending;
               authUsernameDisplay.classList.remove('auth-hidden'); setup.classList.add('auth-hidden');
               authGreeting.textContent = 'こんにちは、' + pending + 'さん';
-              showToast('登録が完了しました。'); return;
+              return;
             }
           });
         }
         if (!currentUsername) {
           authUsernameDisplay.classList.add('auth-hidden'); setup.classList.remove('auth-hidden');
-          authGreeting.textContent = 'こんにちは、ゲストさん';
         }
       }
     });
@@ -615,6 +616,7 @@ authLoginBtn.addEventListener('click', async function () {
   var res = await supabase.auth.signInWithPassword({ email: email, password: password });
   if (res.error) { authShowError(res.error.message); return; }
   authEmailInput.value = ''; authPasswordInput.value = ''; authClearError();
+  showToast('ログインしました。');
 });
 
 authRegisterBtn.addEventListener('click', async function () {
@@ -630,7 +632,7 @@ authRegisterBtn.addEventListener('click', async function () {
     var { error: profErr } = await supabase.from('profiles').insert({ id: uid, username: username });
     if (profErr) { authShowError('プロフィール作成失敗: ' + profErr.message); return; }
     currentUsername = username;
-    authGreeting.textContent = 'こんにちは、' + username + 'さん';
+    showToast('登録が完了しました。');
   } else {
     sessionStorage.setItem('pendingUsername', username);
     showToast('確認メールを送信しました。'); return;
