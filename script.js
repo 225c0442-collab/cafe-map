@@ -580,8 +580,7 @@ function updateAuthUI(session) {
   if (session) {
     authNotLoggedIn.classList.add('auth-hidden'); authLoggedIn.classList.remove('auth-hidden');
     currentUserId = session.user.id; currentEmail = session.user.email; authEmailDisplay.textContent = currentEmail; document.body.classList.add('logged-in');
-    var prefix = currentEmail ? currentEmail.split('@')[0] : '';
-    authGreeting.textContent = 'こんにちは、' + prefix + 'さん';
+    authGreeting.textContent = 'こんにちは、...';
     supabase.from('profiles').select('username').eq('id', session.user.id).maybeSingle().then(function (res) {
       var setup = document.getElementById('authUsernameSetup');
       if (res.data && res.data.username) {
@@ -602,16 +601,8 @@ function updateAuthUI(session) {
           });
         }
         if (!currentUsername) {
-          var suggested = currentEmail ? currentEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : 'user';
-          supabase.from('profiles').insert({ id: session.user.id, username: suggested }).then(function (ins) {
-            if (!ins.error) {
-              currentUsername = suggested; authUsernameDisplay.textContent = suggested;
-              authUsernameDisplay.classList.remove('auth-hidden'); setup.classList.add('auth-hidden');
-              authGreeting.textContent = 'こんにちは、' + suggested + 'さん';
-            } else {
-              authUsernameDisplay.classList.add('auth-hidden'); setup.classList.remove('auth-hidden');
-            }
-          });
+          authUsernameDisplay.classList.add('auth-hidden'); setup.classList.remove('auth-hidden');
+          authGreeting.textContent = 'こんにちは、' + currentEmail + '（ユーザーネーム未設定）';
         }
       }
     });
