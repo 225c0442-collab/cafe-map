@@ -562,9 +562,13 @@ L.Control.CurrentLocation = L.Control.extend({
 new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 var CHANGELOG = [
+  { date: '2026-07-15', time: '21:30', text: '<b>新宿・百人町・天龍村・八王子・みなみ野にカフェを追加</b><ul><li>新宿: アナログシンジュク、アティックルーム</li><li>百人町: ゆめいろcafe、SOOM CAFE、名曲喫茶カオリ座</li><li>天龍村(長野): バードPaPa、龍の道、WACHI CAFEさとね</li><li>八王子: 八王子珈琲店、Cafe Anri Matisse、TUBOCAFE</li><li>八王子みなみ野: 高倉町珈琲、タリーズ、373-DINING、BEANS TIME</li><li>新エリアのカフェを地図で表示可能に</li></ul>' },
+  { date: '2026-07-15', time: '19:30', text: '<b>関連アプリモーダル追加・ポータルサイト公開</b><ul><li>ヘッダーに「関連アプリ」ボタンを追加</li><li>TDL天気予報・おみくじアプリへのリンク</li><li>ポータルページ (Web Applications Portfolio) を公開</li></ul>' },
+  { date: '2026-07-15', time: '18:20', text: '<b>位置決め時に仮ピン表示</b><ul><li>地図タップ時に青いプレビューマーカーが表示されるように</li></ul>' },
+  { date: '2026-07-15', time: '17:30', text: '<b>スターバックス13店舗を追加</b><ul><li>渋谷マークシティ、ストリーム、TSUTAYA、フクラス、ヒカリエ、クロスタワー、公園通り、パルコ、モディ、cocoti、3丁目、文化村通り</li><li>マーカー色をスタバグリーンに設定</li></ul>' },
   { date: '2026-07-15', time: '16:30', text: '<b>UIデザインを一新</b><ul><li>モダンなトースト通知を実装</li><li>グラスモフィズムとアースカラーの適用</li></ul>' },
-  { date: '2026-07-15', time: '16:00', text: '<b>会員登録・ログイン機能を追加</b><ul><li>メールアドレス＋パスワードでの会員登録・ログイン</li><li>ログイン中のみカフェ登録・編集・削除・コメントが可能に</li><li>操作ログ機能（誰がいつ何をしたか記録）</li><li>ユーザーネーム設定（重複不可）</li></ul>' },
-  { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li></ul>' }
+  { date: '2026-07-15', time: '16:00', text: '<b>会員登録・ログイン機能を追加</b><ul><li>メールアドレス＋パスワードでの会員登録・ログイン</li><li>ログイン中のみカフェ登録・編集・削除・コメント・いいねが可能に</li><li>操作ログ機能（誰がいつ何をしたか記録）</li><li>ユーザーネーム設定（重複不可）</li><li>いいね機能の重複防止（likesテーブル）</li><li>コメント時の名前入力を廃止しログインユーザー名を自動使用</li></ul>' },
+  { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li><li>RLSポリシー設定、GRANT権限付与</li></ul>' }
 ];
 
 function renderChangelog() {
