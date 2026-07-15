@@ -44,6 +44,7 @@
         <input type="text" id="authSetupUsername" class="auth-input username" placeholder="ユーザーネームを設定">
         <button class="auth-btn" id="authSetupBtn">設定</button>
       </span>
+      <button class="auth-btn auth-btn-out" id="authSettingsBtn">設定</button>
       <button class="auth-btn auth-btn-out" id="authLogoutBtn">ログアウト</button>
     </div>
   </div>
@@ -133,6 +134,32 @@
       <button class="modal-close" id="actionLogClose">×</button>
     </div>
     <div class="modal-body" id="actionLogBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>アカウント設定</h2>
+      <button class="modal-close" id="settingsClose">×</button>
+    </div>
+    <div class="modal-body" id="settingsBody">
+      <div class="settings-section">
+        <h3>ユーザーネーム変更</h3>
+        <p class="settings-desc">現在のユーザーネーム: <strong id="settingsCurrentName"></strong></p>
+        <div class="settings-row">
+          <input type="text" id="settingsNewName" class="auth-input username" placeholder="新しいユーザーネーム" maxlength="20">
+          <button class="auth-btn" id="settingsNameBtn">変更</button>
+        </div>
+        <p class="settings-note" id="settingsNameNote">月に1回のみ変更できます</p>
+      </div>
+      <hr class="settings-divider">
+      <div class="settings-section">
+        <h3>アカウント削除</h3>
+        <p class="settings-desc">アカウントを削除すると、すべてのデータが失われます。この操作は元に戻せません。</p>
+        <button class="auth-btn auth-btn-danger" id="settingsDeleteBtn">アカウントを削除する</button>
+      </div>
+    </div>
   </div>
 </div>
 

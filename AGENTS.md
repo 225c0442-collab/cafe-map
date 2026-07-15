@@ -17,7 +17,7 @@
 - cafes: id (PK), name, address, lat, lng, comment, hours, wifi, power, parking, tags, like_count, created_at, updated_at
 - comments: id (PK), cafe_id (FK), nickname, text, created_at
 - profiles: id (FK→auth.users), username (unique)
-- action_log: id (PK), user_id, action, target, created_at
+- action_log: id (PK), username, action, cafe_name, created_at
 - likes: id (PK), user_id, cafe_id, created_at (unique(user_id, cafe_id))
 
 ## RLS
