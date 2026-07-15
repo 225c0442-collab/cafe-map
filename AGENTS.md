@@ -11,10 +11,10 @@
 
 ## Supabase プロジェクト
 - URL: https://nwlfxjtunbqjkwpiaury.supabase.co
-- anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Mzg3MjMsImV4cCI6MjA2MzAxNDcyM30.pVrf9BT9sYPgqFnqBrFlnAJqYHL43NH10nCIPGF7Fh8
+- anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTMxOTMsImV4cCI6MjA5OTU4OTE5M30.1ew82vNMtwqqm97-neRxW21hHTW4LH2NmbNZ230rppU
 
 ## テーブル
-- cafes: id (PK), name, address, lat, lng, desc, hours, wifi, power, parking, tags, like_count, created_at, updated_at
+- cafes: id (PK), name, address, lat, lng, comment, hours, wifi, power, parking, tags, like_count, created_at, updated_at
 - comments: id (PK), cafe_id (FK), nickname, text, created_at
 - profiles: id (FK→auth.users), username (unique)
 - action_log: id (PK), user_id, action, target, created_at
@@ -33,7 +33,10 @@
 
 ### 手順
 1. git push origin master
-2. rsync で HTML/CSS/JS をサーバーに転送
+2. 以下でサーバーに転送:
+   ```
+   scp index.html style.css script.js AGENTS.md p225C0442@class.tama.net:~/public_html/cafe-map/
+   ```
 3. http://class.tama.net/~p225C0442/cafe-map/ で確認
 
 ## コード規約
