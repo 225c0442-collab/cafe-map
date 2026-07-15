@@ -177,7 +177,6 @@ function makePopupContent(cafe) {
       '<div class="popup-comments-title">コメント</div>' +
       '<div class="popup-comments-list"></div>' +
       '<div class="popup-comment-form">' +
-        '<input type="text" class="comment-nick" placeholder="名前" maxlength="20">' +
         '<input type="text" class="comment-text" placeholder="コメントを入力..." maxlength="200">' +
         '<button class="comment-submit" data-id="' + cafe.id + '">送信</button>' +
       '</div>' +
@@ -429,12 +428,11 @@ document.addEventListener('click', async function (e) {
     if (!requireLogin()) return;
     var cafeId = parseInt(t.getAttribute('data-id'), 10);
     var form = t.parentNode;
-    var nick = form.querySelector('.comment-nick');
     var text = form.querySelector('.comment-text');
-    if (!nick.value.trim()) { showToast('名前を入力してください'); return; }
     if (!text.value.trim()) { showToast('コメントを入力してください'); return; }
-    insertComment(cafeId, nick.value.trim(), text.value.trim()).then(function () {
-      nick.value = ''; text.value = '';
+    if (!currentUsername) { showToast('ユーザーネームが設定されていません'); return; }
+    insertComment(cafeId, currentUsername, text.value.trim()).then(function () {
+      text.value = '';
       var list = form.parentNode.querySelector('.popup-comments-list');
       if (list) {
         list.innerHTML = '<div style="font-size:11px;color:#8c7e73;text-align:center;">読み込み中...</div>';
