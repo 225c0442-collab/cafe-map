@@ -313,3 +313,47 @@ body:not(.logged-in) .form-toggle { display: none !important; }
   .auth-input { width: 100%; }
   .leaflet-top { top: 155px !important; }
 }
+
+/* ===== 関連アプリモーダル用のスタイル ===== */
+.app-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(74, 55, 40, 0.08);
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fdfbf9;
+}
+.app-link-card:last-child {
+  margin-bottom: 0;
+}
+.app-link-card:hover {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(74, 55, 40, 0.06);
+  border-color: #b5825a;
+}
+.app-link-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2b1c15;
+  margin-bottom: 4px;
+}
+.app-link-desc {
+  font-size: 11px;
+  color: #8c7e73;
+  line-height: 1.5;
+}
+.app-link-arrow {
+  font-size: 14px;
+  color: #b5825a;
+  font-weight: 700;
+  padding-left: 12px;
+  transition: transform 0.25s;
+}
+.app-link-card:hover .app-link-arrow {
+  transform: translateX(4px);
+}

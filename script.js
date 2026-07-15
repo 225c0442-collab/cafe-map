@@ -803,3 +803,16 @@ map.on('click', function (e) {
 });
 
 await fetchCafes();
+
+// ===== 関連アプリモーダルの表示制御 =====
+document.getElementById('appsBtn').addEventListener('click', function () {
+  document.getElementById('appsModal').classList.add('open');
+});
+
+document.getElementById('appsClose').addEventListener('click', function () {
+  document.getElementById('appsModal').classList.remove('open');
+});
+
+document.getElementById('appsModal').addEventListener('click', function (e) {
+  if (e.target === this) this.classList.remove('open');
+});

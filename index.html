@@ -15,6 +15,7 @@
 <div class="header">
   <h1><span>Shibuya</span> Cafe Map</h1>
   <div class="header-actions">
+    <button class="header-btn" id="appsBtn">関連アプリ</button>
     <button class="header-btn" id="changelogBtn">更新ログ</button>
     <button class="header-btn" id="actionLogBtn">操作ログ</button>
     <button class="header-btn" id="exportBtn">出力</button>
@@ -44,7 +45,6 @@
         <input type="text" id="authSetupUsername" class="auth-input username" placeholder="ユーザーネームを設定">
         <button class="auth-btn" id="authSetupBtn">設定</button>
       </span>
-      <button class="auth-btn auth-btn-out" id="authSettingsBtn">設定</button>
       <button class="auth-btn auth-btn-out" id="authLogoutBtn">ログアウト</button>
     </div>
   </div>
@@ -117,6 +117,38 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="appsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>関連アプリ</h2>
+      <button class="modal-close" id="appsClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="app-link-card" onclick="location.href='/'">
+        <div class="app-link-info">
+          <div class="app-link-title">アプリ一覧に戻る</div>
+          <div class="app-link-desc">すべてのアプリが集まったポータルページを表示します。</div>
+        </div>
+        <div class="app-link-arrow">→</div>
+      </div>
+      <div class="app-link-card" onclick="window.open('https://225c0442-collab.github.io/WebProgramming/20260616/', '_blank')">
+        <div class="app-link-info">
+          <div class="app-link-title">TDL天気予報</div>
+          <div class="app-link-desc">東京ディズニーランドのリアルタイム気象情報を確認できます。</div>
+        </div>
+        <div class="app-link-arrow">→</div>
+      </div>
+      <div class="app-link-card" onclick="window.open('https://class.tama.net/u/p225C0442/20260519/omikuji.html', '_blank')">
+        <div class="app-link-info">
+          <div class="app-link-title">おみくじアプリ</div>
+          <div class="app-link-desc">今日の運勢とラッキープレイスをシンプルに占うことができます。</div>
+        </div>
+        <div class="app-link-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="changelogModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -134,32 +166,6 @@
       <button class="modal-close" id="actionLogClose">×</button>
     </div>
     <div class="modal-body" id="actionLogBody"></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="settingsModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>アカウント設定</h2>
-      <button class="modal-close" id="settingsClose">×</button>
-    </div>
-    <div class="modal-body" id="settingsBody">
-      <div class="settings-section">
-        <h3>ユーザーネーム変更</h3>
-        <p class="settings-desc">現在のユーザーネーム: <strong id="settingsCurrentName"></strong></p>
-        <div class="settings-row">
-          <input type="text" id="settingsNewName" class="auth-input username" placeholder="新しいユーザーネーム" maxlength="20">
-          <button class="auth-btn" id="settingsNameBtn">変更</button>
-        </div>
-        <p class="settings-note" id="settingsNameNote">月に1回のみ変更できます</p>
-      </div>
-      <hr class="settings-divider">
-      <div class="settings-section">
-        <h3>アカウント削除</h3>
-        <p class="settings-desc">アカウントを削除すると、すべてのデータが失われます。この操作は元に戻せません。</p>
-        <button class="auth-btn auth-btn-danger" id="settingsDeleteBtn">アカウントを削除する</button>
-      </div>
-    </div>
   </div>
 </div>
 
