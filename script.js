@@ -4,6 +4,17 @@ const SUPABASE_URL = 'https://nwlfxjtunbqjkwpiaury.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTMxOTMsImV4cCI6MjA5OTU4OTE5M30.1ew82vNMtwqqm97-neRxW21hHTW4LH2NmbNZ230rppU';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// アクセスカウンター
+(function () {
+  var el = document.getElementById('visitCount');
+  if (!el) return;
+  var key = 'cafe-map-' + location.hostname;
+  fetch('https://api.countapi.xyz/hit/cafe-map/' + key)
+    .then(function (r) { return r.json(); })
+    .then(function (d) { if (d && typeof d.value === 'number') el.textContent = d.value.toLocaleString(); })
+    .catch(function () { el.textContent = '?'; });
+})();
+
 // トースト通知機能 (絵文字引数を削除)
 function showToast(message) {
   const container = document.getElementById('toastContainer');

@@ -73,9 +73,18 @@ html, body {
 }
 .header-btn:hover { background: #b5825a; color: #fff; border-color: #b5825a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(181, 130, 90, 0.2); }
 
+/* ===== アクセスカウンター ===== */
+.counter-bar {
+  position: fixed; top: 59px; left: 0; right: 0; z-index: 997;
+  background: rgba(74, 55, 40, 0.06); text-align: center;
+  padding: 3px 10px; font-size: 11px; color: #7d7269; font-weight: 500;
+  letter-spacing: 0.03em; pointer-events: none;
+}
+.counter-bar #visitCount { font-weight: 700; color: #b5825a; }
+
 /* ===== 認証バー ===== */
 .auth-bar {
-  position: fixed; top: 59px; left: 0; right: 0; z-index: 998;
+  position: fixed; top: 80px; left: 0; right: 0; z-index: 998;
   background: rgba(252, 251, 249, 0.9); backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(74, 55, 40, 0.08);
   padding: 8px 20px; min-height: 44px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
@@ -306,12 +315,11 @@ body:not(.logged-in) .form-toggle { display: none !important; }
   .header { padding: 10px 14px; }
   .header h1 { font-size: 15px; }
   .header-btn { font-size: 10px; padding: 6px 10px; }
-  .auth-bar { top: 55px; padding: 8px 14px; }
-  .list-panel { width: 100%; padding-top: 105px; }
+  .auth-bar { top: 76px; padding: 8px 14px; }
+  .list-panel { width: 100%; padding-top: 126px; }
   .form-panel { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; padding: 18px 18px 24px; }
   .form-toggle { bottom: 18px; right: 18px; width: 50px; height: 50px; font-size: 26px; }
-  .auth-input { width: 100%; }
-  .leaflet-top { top: 155px !important; }
+  .leaflet-top { top: 176px !important; }
 }
 
 /* ===== 関連アプリモーダル用のスタイル ===== */
