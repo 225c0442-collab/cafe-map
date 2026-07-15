@@ -16,7 +16,8 @@ function showToast(message) {
 
 const TAG_LABELS = {
   power: '電源あり', wifi: 'Wi-Fi完備', terrace: 'テラス席',
-  pet: 'ペット可', smoking: '喫煙可', quiet: '静かな空間'
+  pet: 'ペット可', smoking: '喫煙可', quiet: '静かな空間',
+  starbucks: 'スターバックス'
 };
 const TAG_KEYS = Object.keys(TAG_LABELS);
 
