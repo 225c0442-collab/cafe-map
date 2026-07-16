@@ -1,3 +1,45 @@
+/* ===== CSS Variables for Dark Mode ===== */
+:root {
+  --bg: #fcfbf9;
+  --bg-raised: #fff;
+  --bg-glass: rgba(255,255,255,0.85);
+  --bg-glass-2: rgba(255,255,255,0.96);
+  --bg-glass-3: rgba(252,251,249,0.9);
+  --text-primary: #2b1c15;
+  --text-secondary: #4a3c31;
+  --text-tertiary: #8c7e73;
+  --border: rgba(74,55,40,0.08);
+  --border-strong: rgba(74,55,40,0.15);
+  --accent: #b5825a;
+  --accent-hover: #966642;
+  --card-bg: #fff;
+  --card-hover: #fdfbf7;
+  --input-bg: #fff;
+  --modal-bg: #fff;
+  --shadow: rgba(0,0,0,0.08);
+  --shadow-strong: rgba(0,0,0,0.15);
+}
+body.dark-mode {
+  --bg: #1a1512;
+  --bg-raised: #2b221c;
+  --bg-glass: rgba(26,21,18,0.92);
+  --bg-glass-2: rgba(26,21,18,0.96);
+  --bg-glass-3: rgba(26,21,18,0.92);
+  --text-primary: #e8ddd0;
+  --text-secondary: #c4b5a5;
+  --text-tertiary: #8a7a6a;
+  --border: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.12);
+  --accent: #d4a574;
+  --accent-hover: #c49362;
+  --card-bg: #2b221c;
+  --card-hover: #342a22;
+  --input-bg: #3a3028;
+  --modal-bg: #2b221c;
+  --shadow: rgba(0,0,0,0.3);
+  --shadow-strong: rgba(0,0,0,0.4);
+}
+
 /* ===== 基本設定とタイポグラフィ ===== */
 * { 
   margin: 0; 
@@ -10,8 +52,8 @@ html, body {
   height: 100%; 
   font-family: 'Plus Jakarta Sans', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
   overflow: hidden; 
-  background-color: #fcfbf9;
-  color: #332d29;
+  background-color: var(--bg);
+  color: var(--text-secondary);
 }
 #map { 
   height: 100%; 
@@ -58,20 +100,20 @@ html, body {
 /* ===== ヘッダー ===== */
 .header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-  background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px);
+  background: var(--bg-glass); backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px); padding: 12px 20px; 
   display: flex; align-items: center; gap: 12px;
-  border-bottom: 1px solid rgba(74, 55, 40, 0.08); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid var(--border); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
 }
-.header h1 { font-size: 18px; font-weight: 700; color: #332d29; display: flex; align-items: center; gap: 6px; letter-spacing: -0.02em; }
-.header h1 span { color: #b5825a; }
+.header h1 { font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; letter-spacing: -0.02em; }
+.header h1 span { color: var(--accent); }
 .header-actions { margin-left: auto; display: flex; gap: 8px; }
 .header-btn {
-  background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(74, 55, 40, 0.15); 
+  background: var(--bg-raised); border: 1px solid var(--border-strong); 
   border-radius: 20px; padding: 8px 14px; font-size: 12px; font-weight: 600;
-  cursor: pointer; color: #4a3c31; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
+  cursor: pointer; color: var(--text-secondary); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
 }
-.header-btn:hover { background: #b5825a; color: #fff; border-color: #b5825a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(181, 130, 90, 0.2); }
+.header-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(181, 130, 90, 0.2); }
 
 /* ===== アクセスカウンターバッジ ===== */
 .counter-badge {
@@ -89,29 +131,29 @@ html, body {
 /* ===== 認証バー ===== */
 .auth-bar {
   position: fixed; top: 59px; left: 0; right: 0; z-index: 998;
-  background: rgba(252, 251, 249, 0.9); backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(74, 55, 40, 0.08);
+  background: var(--bg-glass-3); backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
   padding: 8px 20px; min-height: 44px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
-#authGreeting { font-size: 12px; font-weight: 600; color: #5c4e43; }
+#authGreeting { font-size: 12px; font-weight: 600; color: var(--text-tertiary); }
 .auth-input {
-  height: 32px; padding: 0 12px; border: 1px solid rgba(74, 55, 40, 0.15); border-radius: 20px;
-  font-size: 12px; outline: none; font-family: inherit; background: #fff; color: #333; transition: all 0.2s ease;
+  height: 32px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 20px;
+  font-size: 12px; outline: none; font-family: inherit; background: var(--input-bg); color: var(--text-primary); transition: all 0.2s ease;
 }
-.auth-input:focus { border-color: #b5825a; box-shadow: 0 0 0 3px rgba(181, 130, 90, 0.15); }
+.auth-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(181, 130, 90, 0.15); }
 .auth-input.username { width: 140px; }
 .auth-btn {
   height: 32px; padding: 0 16px; border: none; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700;
-  background: #b5825a; color: #fff; white-space: nowrap; transition: all 0.25s;
+  background: var(--accent); color: #fff; white-space: nowrap; transition: all 0.25s;
 }
-.auth-btn:hover { background: #966642; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(181, 130, 90, 0.25); }
+.auth-btn:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(181, 130, 90, 0.25); }
 .auth-btn-out { background: #7d7269; }
 .auth-btn-out:hover { background: #5c534c; box-shadow: 0 4px 12px rgba(125, 114, 105, 0.25); }
-.auth-link { font-size: 11px; color: #8c7e73; cursor: pointer; text-decoration: none; font-weight: 600; border-bottom: 1px dashed #8c7e73; transition: color 0.2s; }
-.auth-link:hover { color: #b5825a; border-color: #b5825a; }
+.auth-link { font-size: 11px; color: var(--text-tertiary); cursor: pointer; text-decoration: none; font-weight: 600; border-bottom: 1px dashed var(--text-tertiary); transition: color 0.2s; }
+.auth-link:hover { color: var(--accent); border-color: var(--accent); }
 .auth-error { font-size: 11px; color: #e74c3c; width: 100%; font-weight: 600; }
-.auth-user { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #4a3c31; }
-.auth-user strong { color: #2b1c15; font-weight: 700; }
+.auth-user { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); }
+.auth-user strong { color: var(--text-primary); font-weight: 700; }
 .auth-user .auth-email { color: #9c8e83; font-size: 12px; }
 .auth-hidden { display: none !important; }
 .auth-register-area { display: flex; align-items: center; gap: 6px; }
@@ -455,3 +497,109 @@ body:not(.logged-in) .form-toggle { display: none !important; }
 .admin-inquiry-reply-text { font-size: 12px; color: #4a3c31; margin: 2px 0; }
 .admin-inquiry-reply-time { font-size: 10px; color: #8c7e73; }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 10px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; vertical-align: middle; }
+
+/* ===== ダークモード追加オーバーライド ===== */
+body.dark-mode .modal-content { background: var(--modal-bg); border-color: var(--border); }
+body.dark-mode .modal-header { border-bottom-color: var(--border); }
+body.dark-mode .modal-header h2 { color: var(--text-primary); }
+body.dark-mode .modal-close { background: var(--bg-raised); color: var(--text-tertiary); border-color: var(--border); }
+body.dark-mode .modal-close:hover { background: var(--card-hover); }
+body.dark-mode .list-panel { background: var(--bg-glass-2); border-right-color: var(--border); }
+body.dark-mode .list-item { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .list-item:hover { background: var(--card-hover); }
+body.dark-mode .list-item-name { color: var(--text-primary); }
+body.dark-mode .list-item-addr { color: var(--text-tertiary); }
+body.dark-mode .list-search input { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .tag-filter-chip { background: var(--card-bg); color: var(--text-secondary); border-color: var(--border-strong); }
+body.dark-mode .form-panel { background: var(--bg-glass-2); border-color: var(--border); }
+body.dark-mode .form-panel h2 { color: var(--text-primary); }
+body.dark-mode .form-group label { color: var(--text-secondary); }
+body.dark-mode .form-group input, body.dark-mode .form-group textarea { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .form-radio-opt, body.dark-mode .form-tag-opt { background: var(--card-bg); color: var(--text-secondary); border-color: var(--border-strong); }
+body.dark-mode .form-radio-opt:hover, body.dark-mode .form-tag-opt:hover { background: var(--card-hover); }
+body.dark-mode .counter-badge { background: rgba(255,255,255,0.1); color: var(--text-tertiary); }
+body.dark-mode .leaflet-popup-content-wrapper { background: var(--modal-bg); border-color: var(--border); }
+body.dark-mode .popup-name { color: var(--text-primary); }
+body.dark-mode .popup-addr { color: var(--text-tertiary); }
+body.dark-mode .popup-desc { background: var(--card-bg); color: var(--text-secondary); border-left-color: var(--accent); }
+body.dark-mode .popup-detail { background: var(--card-bg); }
+body.dark-mode .popup-detail-row { color: var(--text-secondary); }
+body.dark-mode .popup-comment { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .popup-comment-text { color: var(--text-secondary); }
+body.dark-mode .popup-comments-title { color: var(--text-secondary); }
+body.dark-mode .popup-comments { border-top-color: var(--border); }
+body.dark-mode .popup-comment-form input { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .admin-user-row { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .admin-user-row:hover { background: var(--card-hover); }
+body.dark-mode .admin-user-name { color: var(--text-primary); }
+body.dark-mode .admin-inquiry-card { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .admin-inquiry-text { color: var(--text-secondary); }
+body.dark-mode .inquiry-item { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .inquiry-item-text { color: var(--text-secondary); }
+body.dark-mode .inquiry-reply { background: var(--bg-raised); }
+body.dark-mode .inquiry-reply p { color: var(--text-secondary); }
+body.dark-mode .admin-inquiry-reply-item { background: var(--bg-raised); }
+body.dark-mode .admin-inquiry-reply-text { color: var(--text-secondary); }
+body.dark-mode .list-toggle, body.dark-mode .locate-btn { background: var(--card-bg); color: var(--text-secondary); border-color: var(--border); }
+body.dark-mode .admin-tabs { background: var(--card-bg); }
+body.dark-mode .admin-tab.active { background: var(--bg-raised); color: var(--text-primary); }
+body.dark-mode .app-link-card { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .app-link-card:hover { background: var(--bg-raised); }
+body.dark-mode .app-link-title { color: var(--text-primary); }
+body.dark-mode .app-link-desc { color: var(--text-tertiary); }
+body.dark-mode .changelog-text { color: var(--text-secondary); }
+body.dark-mode .action-log-item { border-bottom-color: var(--border); }
+body.dark-mode .admin-inquiry-reply-box textarea { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .admin-section-title { color: var(--text-primary); border-bottom-color: var(--border); }
+body.dark-mode .settings-section h3 { color: var(--text-primary); }
+body.dark-mode .settings-desc { color: var(--text-tertiary); }
+body.dark-mode .inquiry-input { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .inquiry-history-title { color: var(--text-secondary); }
+body.dark-mode .inquiry-empty { color: var(--text-tertiary); }
+
+/* ===== ダークモードトグルボタン ===== */
+.dark-toggle { font-size: 16px; line-height: 1; padding: 6px 10px !important; }
+
+/* ===== 営業中インジケーター ===== */
+.open-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; }
+.open-indicator .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.open-indicator .dot.open { background: #27ae60; box-shadow: 0 0 6px rgba(39,174,96,0.4); }
+.open-indicator .dot.closed { background: #e74c3c; box-shadow: 0 0 6px rgba(231,76,60,0.3); }
+.open-indicator .dot.unknown { background: #8c7e73; }
+.list-item .open-indicator { margin-top: 4px; }
+.popup-detail-row .open-indicator .label { font-weight: 400; }
+.popup-detail-row .open-indicator .dot { width: 10px; height: 10px; }
+
+/* ===== 写真 ===== */
+.photo-upload-area { margin-top: 6px; }
+.photo-upload-area input[type="file"] { display: none; }
+.photo-upload-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px dashed var(--border-strong); border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-tertiary); background: var(--card-bg); transition: all 0.2s; }
+.photo-upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+.photo-upload-btn.has-photo { border-style: solid; border-color: #27ae60; color: #27ae60; }
+.photo-preview { margin-top: 8px; position: relative; display: inline-block; }
+.photo-preview img { max-width: 120px; max-height: 120px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); }
+.photo-preview .photo-remove { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; border: none; background: #e74c3c; color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.popup-photo { margin-bottom: 10px; }
+.popup-photo img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s; }
+.popup-photo img:hover { transform: scale(1.02); }
+
+/* ===== いいね一覧モーダル ===== */
+.likes-list { max-height: 400px; overflow-y: auto; }
+.likes-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+.likes-item:hover { background: var(--card-hover); border-color: var(--accent); }
+.likes-item-icon { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; }
+.likes-item-info { flex: 1; min-width: 0; }
+.likes-item-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.likes-item-addr { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.likes-empty { text-align: center; color: var(--text-tertiary); padding: 40px 0; font-size: 13px; }
+
+/* ===== おすすめカフェモーダル ===== */
+.recommend-card { text-align: center; padding: 20px 0; }
+.recommend-icon { font-size: 48px; margin-bottom: 12px; }
+.recommend-name { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.recommend-addr { font-size: 13px; color: var(--text-tertiary); margin-bottom: 8px; }
+.recommend-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; background: var(--card-bg); padding: 12px 16px; border-radius: 10px; border-left: 3px solid var(--accent); margin-bottom: 16px; text-align: left; }
+.recommend-tags { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+.recommend-again { background: var(--accent); color: #fff; border: none; border-radius: 20px; padding: 10px 24px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.recommend-again:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.recommend-empty { text-align: center; color: var(--text-tertiary); padding: 40px 0; font-size: 13px; }

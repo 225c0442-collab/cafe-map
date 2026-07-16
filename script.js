@@ -170,21 +170,46 @@ function boolHtml(label, val) {
   return '<div class="popup-detail-row">' + label + ': <span class="val ' + cls + '">' + txt + '</span></div>';
 }
 
+function openStatus(cafe) {
+  if (!cafe.hours) return { cls: 'unknown', label: '情報なし' };
+  var h = cafe.hours.replace(/[〜~]/g, '-');
+  var m = h.match(/(\d{1,2}):?(\d{0,2})\s*[-–]\s*(\d{1,2}):?(\d{0,2})/);
+  if (!m) return { cls: 'unknown', label: '情報なし' };
+  var startH = parseInt(m[1], 10), startM = parseInt(m[2] || '0', 10);
+  var endH = parseInt(m[3], 10), endM = parseInt(m[4] || '0', 10);
+  var now = new Date();
+  var nowMin = now.getHours() * 60 + now.getMinutes();
+  var startMin = startH * 60 + startM;
+  var endMin = endH * 60 + endM;
+  if (endMin <= startMin) { endMin += 1440; }
+  if (nowMin < startMin) { nowMin += 1440; }
+  var isOpen = nowMin >= startMin && nowMin <= endMin;
+  return { cls: isOpen ? 'open' : 'closed', label: isOpen ? '営業中' : '営業時間外' };
+}
+
 function makePopupContent(cafe) {
   var tagsHtml = '';
   if (cafe.tags && cafe.tags.length) {
     tagsHtml = '<div class="popup-tags">' + cafe.tags.map(function (t) { return '<span class="tag tag-' + t + '">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + '</div>';
   }
+  var photoHtml = '';
+  var photoUrl = cafePhotoUrls[cafe.id];
+  if (photoUrl) photoHtml = '<div class="popup-photo"><img src="' + photoUrl + '" onclick="window.open(\'' + photoUrl + '\',\'_blank\')"></div>';
   var detailHtml = '';
   if (cafe.hours || cafe.wifi !== undefined || cafe.power !== undefined || cafe.parking !== undefined) {
     detailHtml = '<div class="popup-detail">';
-    if (cafe.hours) detailHtml += '<div class="popup-detail-row">営業時間: ' + cafe.hours + '</div>';
+    if (cafe.hours) {
+      var st = openStatus(cafe);
+      detailHtml += '<div class="popup-detail-row"><span class="open-indicator"><span class="dot ' + st.cls + '"></span><span class="label">' + st.label + '</span></span></div>';
+      detailHtml += '<div class="popup-detail-row">営業時間: ' + cafe.hours + '</div>';
+    }
     if (cafe.wifi !== undefined) detailHtml += boolHtml('Wi-Fi', cafe.wifi);
     if (cafe.power !== undefined) detailHtml += boolHtml('電源', cafe.power);
     if (cafe.parking !== undefined) detailHtml += boolHtml('駐車場', cafe.parking);
     detailHtml += '</div>';
   }
   return (
+    photoHtml +
     '<div class="popup-name">' + cafe.name + '</div>' + tagsHtml + detailHtml +
     '<div class="popup-addr">' + cafe.address + '</div>' +
     '<div class="popup-desc">' + cafe.desc + '</div>' +
@@ -533,11 +558,13 @@ function renderList() {
     var color = colors[Math.abs(c.id) % colors.length];
     var tagsHtml = '';
     if (c.tags && c.tags.length) { tagsHtml = '<div class="list-item-tags">' + c.tags.map(function (t) { return '<span class="tag tag-' + t + '">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + '</div>'; }
+    var st = openStatus(c);
+    var openHtml = '<div class="open-indicator"><span class="dot ' + st.cls + '"></span><span>' + st.label + '</span></div>';
     return (
       '<div class="list-item" data-id="' + c.id + '">' +
         '<div class="list-item-marker" style="background:' + color + '"></div>' +
         '<div class="list-item-info">' +
-          '<div class="list-item-name">' + c.name + '</div><div class="list-item-addr">' + c.address + '</div>' + tagsHtml +
+          '<div class="list-item-name">' + c.name + '</div><div class="list-item-addr">' + c.address + '</div>' + openHtml + tagsHtml +
         '</div></div>'
     );
   }).join('');
@@ -581,6 +608,7 @@ L.Control.CurrentLocation = L.Control.extend({
 new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 var CHANGELOG = [
+  { date: '2026-07-16', time: '16:30', text: '<b>ダークモード・営業中表示・写真・いいね一覧・おすすめカフェを追加</b><ul><li>ダークモード切替（ヘッダーの🌙/☀️ボタン）</li><li>営業時間から営業中/時間外を自動判定してリストとポップアップに表示</li><li>カフェ写真アップロード（base64保存、フォームから設定）</li><li>いいね一覧モーダル（いいねしたカフェをリスト表示）</li><li>おすすめカフェ（ランダム抽選、もう一度引く・地図で見る）</li></ul>' },
   { date: '2026-07-16', time: '15:00', text: '<b>問い合わせ機能・アカウント削除機能を追加</b><ul><li>一般ユーザーが管理者に問い合わせを送信できる機能</li><li>管理パネルに問い合わせタブを追加（閲覧・返信・解決）</li><li>管理パネルにアカウント削除機能を追加</li><li>未読問い合わせバッジを管理タブに表示</li></ul>' },
   { date: '2026-07-16', time: '13:30', text: '<b>カフェデータの精度検証と修正</b><ul><li>カフェ・ド・クリエ渋谷店（存在確認できず削除）</li><li>TUBOCAFE→TUBO CAFEに名称修正、住所を旭町12-6に訂正</li><li>名曲喫茶カオリ座の住所を百人町1-23-19に詳細化</li></ul>' },
   { date: '2026-07-16', time: '13:30', text: '<b>管理パネル追加・アクセスカウンターをヘッダーに移動</b><ul><li>開発者用管理パネル（ユーザーBAN機能）を追加</li><li>アクセスカウンターをヘッダー内バッジに統合</li><li>BANされたユーザーの操作を制限</li></ul>' },
@@ -763,6 +791,12 @@ map.on('click', function (e) {
 });
 
 await fetchCafes();
+
+// ===== 写真情報の読み込み（fetchCafes後にURLをセット） =====
+loadPhotoUrls().then(function () { renderAllCafes(); renderList(); });
+
+// ===== 営業情報の定期更新（1分ごと） =====
+setInterval(function () { renderList(); }, 60000);
 
 // ===== 関連アプリモーダルの表示制御 =====
 document.getElementById('appsBtn').addEventListener('click', function () {
@@ -1204,3 +1238,182 @@ renderAdminUserList = function () {
   });
 };
 
+// ===== ダークモード =====
+(function () {
+  var toggle = document.getElementById('darkToggle');
+  var saved = localStorage.getItem('cafe-dark-mode');
+  if (saved === 'true') { document.body.classList.add('dark-mode'); toggle.textContent = '☀️'; }
+  toggle.addEventListener('click', function () {
+    var isDark = document.body.classList.toggle('dark-mode');
+    toggle.textContent = isDark ? '☀️' : '🌙';
+    localStorage.setItem('cafe-dark-mode', isDark);
+  });
+})();
+
+// ===== 写真機能 (Supabase cafes id=57) =====
+var PHOTOS_CAFE_ID = 57;
+var cafePhotoUrls = {};
+
+function loadPhotoUrls() {
+  return supabase.from('cafes').select('comment').eq('id', PHOTOS_CAFE_ID).limit(1).then(function (res) {
+    if (res.data && res.data.length) {
+      try { var d = JSON.parse(res.data[0].comment || '{}'); cafePhotoUrls = d.photos || {}; } catch (e) { cafePhotoUrls = {}; }
+    } else { cafePhotoUrls = {}; }
+  });
+}
+
+function savePhotoUrls() {
+  supabase.from('cafes').update({ comment: JSON.stringify({ photos: cafePhotoUrls }) }).eq('id', PHOTOS_CAFE_ID).then();
+}
+
+var photoPreview = document.getElementById('photoPreview');
+var photoPreviewImg = document.getElementById('photoPreviewImg');
+var photoInput = document.getElementById('photoInput');
+var photoUploadBtn = document.getElementById('photoUploadBtn');
+var photoRemoveBtn = document.getElementById('photoRemoveBtn');
+var currentPhotoDataUrl = null;
+
+document.getElementById('photoUploadBtn').addEventListener('click', function () { photoInput.click(); });
+
+photoInput.addEventListener('change', function () {
+  var file = photoInput.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { showToast('画像は2MB以下にしてください'); return; }
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    currentPhotoDataUrl = e.target.result;
+    photoPreviewImg.src = currentPhotoDataUrl;
+    photoPreview.style.display = '';
+    photoUploadBtn.textContent = '写真を変更';
+    photoUploadBtn.classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+});
+
+photoRemoveBtn.addEventListener('click', function () {
+  currentPhotoDataUrl = null;
+  photoPreview.style.display = 'none';
+  photoInput.value = '';
+  photoUploadBtn.textContent = '写真を選択';
+  photoUploadBtn.classList.remove('has-photo');
+});
+
+var _origSetFormMode = setFormMode;
+setFormMode = function (mode, cafe) {
+  _origSetFormMode(mode, cafe);
+  if (mode === 'edit' && cafe && cafePhotoUrls[cafe.id]) {
+    currentPhotoDataUrl = cafePhotoUrls[cafe.id];
+    photoPreviewImg.src = currentPhotoDataUrl;
+    photoPreview.style.display = '';
+    photoUploadBtn.textContent = '写真を変更';
+    photoUploadBtn.classList.add('has-photo');
+  } else {
+    currentPhotoDataUrl = null;
+    photoPreview.style.display = 'none';
+    photoInput.value = '';
+    photoUploadBtn.textContent = '写真を選択';
+    photoUploadBtn.classList.remove('has-photo');
+  }
+};
+
+var _origResetFormFields = resetFormFields;
+resetFormFields = function () {
+  _origResetFormFields();
+  currentPhotoDataUrl = null;
+  photoPreview.style.display = 'none';
+  photoInput.value = '';
+  photoUploadBtn.textContent = '写真を選択';
+  photoUploadBtn.classList.remove('has-photo');
+};
+
+// フォーム保存後に写真を保存（元のformSubmitハンドラが完了した後に発火）
+var _origFormSubmitHandler = formSubmit._listeners ? null : null;
+// 写真を保存する関数（既存のinsertCafeとupdateCafeをラップ）
+var _origInsertCafe = insertCafe;
+insertCafe = async function (cafe) {
+  var res = await _origInsertCafe(cafe);
+  if (currentPhotoDataUrl) { cafePhotoUrls[res.id] = currentPhotoDataUrl; savePhotoUrls(); }
+  return res;
+};
+var _origUpdateCafe = updateCafe;
+updateCafe = async function (id, cafe) {
+  await _origUpdateCafe(id, cafe);
+  if (currentPhotoDataUrl) { cafePhotoUrls[id] = currentPhotoDataUrl; savePhotoUrls(); }
+  else if (cafePhotoUrls[id]) { delete cafePhotoUrls[id]; savePhotoUrls(); }
+};
+
+// ===== いいね一覧 =====
+var likesBtn = document.getElementById('likesBtn');
+var likesModal = document.getElementById('likesModal');
+var likesList = document.getElementById('likesList');
+
+function renderLikesList() {
+  likesList.innerHTML = '<div style="text-align:center;color:#8c7e73;font-size:13px;padding:20px 0;">読み込み中...</div>';
+  if (!currentUserId) { likesList.innerHTML = '<div class="likes-empty">ログインが必要です</div>'; return; }
+  supabase.from('likes').select('cafe_id').eq('user_id', currentUserId).then(function (res) {
+    if (res.error) { likesList.innerHTML = '<div class="likes-empty">読み込みエラー</div>'; return; }
+    var likedIds = (res.data || []).map(function (l) { return l.cafe_id; });
+    var liked = cafes.filter(function (c) { return likedIds.indexOf(c.id) !== -1; });
+    if (!liked.length) { likesList.innerHTML = '<div class="likes-empty">いいねしたカフェはありません</div>'; return; }
+    var colors = ['#b5825a', '#2d9cdb', '#27ae60', '#e67e22', '#9b59b6', '#e74c3c', '#1abc9c'];
+    likesList.innerHTML = liked.map(function (c) {
+      var color = colors[Math.abs(c.id) % colors.length];
+      return '<div class="likes-item" data-id="' + c.id + '">' +
+        '<div class="likes-item-icon" style="background:' + color + '"></div>' +
+        '<div class="likes-item-info">' +
+          '<div class="likes-item-name">' + c.name + '</div>' +
+          '<div class="likes-item-addr">' + c.address + '</div>' +
+        '</div></div>';
+    }).join('');
+    likesList.querySelectorAll('.likes-item').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var id = parseInt(el.getAttribute('data-id'), 10);
+        focusCafeOnMap(id);
+        likesModal.classList.remove('open');
+      });
+    });
+  });
+}
+
+likesBtn.addEventListener('click', function () { likesModal.classList.add('open'); renderLikesList(); });
+document.getElementById('likesClose').addEventListener('click', function () { likesModal.classList.remove('open'); });
+likesModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+
+// ===== おすすめカフェ =====
+var recommendModal = document.getElementById('recommendModal');
+var recommendContent = document.getElementById('recommendContent');
+
+function showRecommend() {
+  var available = cafes.filter(function (c) { return c.id > 0 && c.id !== 53 && c.id !== 54 && c.id !== 55 && c.id !== 56 && c.id !== 57; });
+  if (!available.length) { recommendContent.innerHTML = '<div class="recommend-empty">カフェが登録されていません</div>'; return; }
+  var pick = available[Math.floor(Math.random() * available.length)];
+  var tagsHtml = '';
+  if (pick.tags && pick.tags.length) { tagsHtml = '<div class="recommend-tags">' + pick.tags.map(function (t) { return '<span class="tag tag-' + t + '">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + '</div>'; }
+  var st = openStatus(pick);
+  recommendContent.innerHTML =
+    '<div class="recommend-card">' +
+      '<div class="recommend-icon">☕</div>' +
+      '<div class="recommend-name">' + escHtml(pick.name) + '</div>' +
+      '<div class="recommend-addr">' + escHtml(pick.address) + '</div>' +
+      '<div style="margin-bottom:10px"><span class="open-indicator"><span class="dot ' + st.cls + '"></span><span style="font-size:13px;font-weight:700;color:var(--text-secondary)">' + st.label + '</span></span></div>' +
+      tagsHtml +
+      '<div class="recommend-desc">' + escHtml(pick.desc) + '</div>' +
+      '<button class="recommend-again" onclick="showRecommend()">もう一度引く</button>' +
+      '<button class="recommend-again" style="background:var(--text-tertiary);margin-left:8px" onclick="focusCafeOnMap(' + pick.id + ');document.getElementById(\'recommendModal\').classList.remove(\'open\')">地図で見る</button>' +
+    '</div>';
+}
+
+document.getElementById('recommendBtn').addEventListener('click', function () { recommendModal.classList.add('open'); showRecommend(); });
+document.getElementById('recommendClose').addEventListener('click', function () { recommendModal.classList.remove('open'); });
+recommendModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+
+// ===== updateAuthUI に likesBtn 表示制御を追加 =====
+var _origUpdateAuthUI2 = updateAuthUI;
+updateAuthUI = function (session) {
+  _origUpdateAuthUI2(session);
+  if (session && currentUserId) {
+    likesBtn.style.display = '';
+  } else {
+    likesBtn.style.display = 'none';
+  }
+};

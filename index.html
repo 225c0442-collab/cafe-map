@@ -18,7 +18,10 @@
     <button class="header-btn" id="appsBtn">関連アプリ</button>
     <button class="header-btn" id="changelogBtn">更新ログ</button>
     <button class="header-btn" id="actionLogBtn">操作ログ</button>
+    <button class="header-btn dark-toggle" id="darkToggle">🌙</button>
     <button class="header-btn" id="inquiryBtn" style="display:none">問い合わせ</button>
+    <button class="header-btn" id="likesBtn" style="display:none">いいね一覧</button>
+    <button class="header-btn" id="recommendBtn">おすすめ</button>
     <button class="header-btn" id="adminBtn" style="display:none">管理</button>
     <button class="header-btn" id="exportBtn">出力</button>
     <button class="header-btn" id="importBtn">読込</button>
@@ -113,6 +116,17 @@
     <label>タグ（任意）</label>
     <div class="form-tags" id="formTags"></div>
   </div>
+  <div class="form-group">
+    <label>写真（任意）</label>
+    <div class="photo-upload-area">
+      <label class="photo-upload-btn" id="photoUploadBtn">写真を選択</label>
+      <input type="file" id="photoInput" accept="image/*">
+      <div class="photo-preview" id="photoPreview" style="display:none">
+        <img id="photoPreviewImg">
+        <button class="photo-remove" id="photoRemoveBtn">×</button>
+      </div>
+    </div>
+  </div>
   <div class="form-actions">
     <button class="btn btn-cancel" id="formCancel">キャンセル</button>
     <button class="btn btn-primary" id="formSubmit">登録する</button>
@@ -183,6 +197,30 @@
         <button class="btn btn-primary" id="inquirySendBtn">送信</button>
       </div>
       <div id="inquiryHistory" class="inquiry-history"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="likesModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>いいね一覧</h2>
+      <button class="modal-close" id="likesClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="likesList" class="likes-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="recommendModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>おすすめカフェ</h2>
+      <button class="modal-close" id="recommendClose">×</button>
+    </div>
+    <div class="modal-body" id="recommendBody">
+      <div id="recommendContent"></div>
     </div>
   </div>
 </div>
