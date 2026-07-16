@@ -581,6 +581,7 @@ L.Control.CurrentLocation = L.Control.extend({
 new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 var CHANGELOG = [
+  { date: '2026-07-16', time: '13:30', text: '<b>カフェデータの精度検証と修正</b><ul><li>カフェ・ド・クリエ渋谷店（存在確認できず削除）</li><li>TUBOCAFE→TUBO CAFEに名称修正、住所を旭町12-6に訂正</li><li>名曲喫茶カオリ座の住所を百人町1-23-19に詳細化</li></ul>' },
   { date: '2026-07-16', time: '13:30', text: '<b>管理パネル追加・アクセスカウンターをヘッダーに移動</b><ul><li>開発者用管理パネル（ユーザーBAN機能）を追加</li><li>アクセスカウンターをヘッダー内バッジに統合</li><li>BANされたユーザーの操作を制限</li></ul>' },
   { date: '2026-07-15', time: '21:30', text: '<b>新宿・百人町・天龍村・八王子・みなみ野にカフェを追加</b><ul><li>新宿: アナログシンジュク、アティックルーム</li><li>百人町: ゆめいろcafe、SOOM CAFE、名曲喫茶カオリ座</li><li>天龍村(長野): バードPaPa、龍の道、WACHI CAFEさとね</li><li>八王子: 八王子珈琲店、Cafe Anri Matisse、TUBOCAFE</li><li>八王子みなみ野: 高倉町珈琲、タリーズ、373-DINING、BEANS TIME</li><li>新エリアのカフェを地図で表示可能に</li></ul>' },
   { date: '2026-07-15', time: '19:30', text: '<b>関連アプリモーダル追加・ポータルサイト公開</b><ul><li>ヘッダーに「関連アプリ」ボタンを追加</li><li>TDL天気予報・おみくじアプリへのリンク</li><li>ポータルページ (Web Applications Portfolio) を公開</li></ul>' },
