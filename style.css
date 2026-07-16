@@ -402,3 +402,55 @@ body:not(.logged-in) .form-toggle { display: none !important; }
 .admin-btn-ban-ban:hover { background: #e74c3c; color: #fff; }
 .admin-btn-ban-unban { background: #e8f8ee; color: #27ae60; }
 .admin-btn-ban-unban:hover { background: #27ae60; color: #fff; }
+
+/* ===== 管理パネル タブ ===== */
+.admin-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: #f5f2ef; border-radius: 12px; padding: 4px; }
+.admin-tab { flex: 1; padding: 8px 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; background: transparent; color: #7d7269; transition: all 0.2s; white-space: nowrap; }
+.admin-tab:hover { color: #4a3c31; }
+.admin-tab.active { background: #fff; color: #2b1c15; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.admin-tab-content { display: none; }
+.admin-tab-content.active { display: block; }
+
+/* ===== 管理パネル 削除ボタン ===== */
+.admin-btn-delete {
+  flex-shrink: 0; padding: 6px 14px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap; background: #fde8e8; color: #e74c3c;
+}
+.admin-btn-delete:hover { background: #e74c3c; color: #fff; }
+
+/* ===== 問い合わせモーダル（一般ユーザー） ===== */
+.inquiry-input { width: 100%; min-height: 100px; padding: 12px; border: 1px solid rgba(74,55,40,0.15); border-radius: 12px; font-size: 13px; font-family: inherit; outline: none; resize: vertical; margin-bottom: 10px; transition: border-color 0.2s; }
+.inquiry-input:focus { border-color: #b5825a; box-shadow: 0 0 0 3px rgba(181,130,90,0.15); }
+.inquiry-history { margin-top: 20px; border-top: 1px solid rgba(74,55,40,0.08); padding-top: 16px; }
+.inquiry-history-title { font-size: 13px; font-weight: 700; color: #4a3c31; margin-bottom: 12px; }
+.inquiry-item { padding: 14px; border-radius: 12px; border: 1px solid rgba(74,55,40,0.06); background: #fdfbf9; margin-bottom: 10px; }
+.inquiry-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.inquiry-item-status { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.inquiry-item-status.open { background: #e8f4fd; color: #2d9cdb; }
+.inquiry-item-status.closed { background: #e8f8ee; color: #27ae60; }
+.inquiry-item-text { font-size: 13px; color: #4a3c31; line-height: 1.6; margin-bottom: 8px; }
+.inquiry-item-time { font-size: 10px; color: #8c7e73; }
+.inquiry-reply { margin-top: 8px; padding: 10px 12px; background: #fff; border-radius: 8px; border-left: 3px solid #b5825a; }
+.inquiry-reply label { font-size: 10px; font-weight: 700; color: #b5825a; display: block; margin-bottom: 4px; }
+.inquiry-reply p { font-size: 12px; color: #4a3c31; line-height: 1.5; margin: 0; }
+.inquiry-reply-time { font-size: 10px; color: #8c7e73; margin-top: 4px; }
+.inquiry-empty { text-align: center; color: #8c7e73; font-size: 12px; padding: 20px 0; }
+
+/* ===== 管理パネル 問い合わせ一覧 ===== */
+.admin-inquiry-list { max-height: 500px; overflow-y: auto; }
+.admin-inquiry-card { padding: 16px; border-radius: 12px; border: 1px solid rgba(74,55,40,0.08); background: #fdfbf9; margin-bottom: 12px; }
+.admin-inquiry-card:last-child { margin-bottom: 0; }
+.admin-inquiry-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.admin-inquiry-user { font-size: 12px; font-weight: 700; color: #b5825a; }
+.admin-inquiry-text { font-size: 13px; color: #4a3c31; line-height: 1.6; margin-bottom: 10px; }
+.admin-inquiry-reply-box { margin-top: 8px; }
+.admin-inquiry-reply-box textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid rgba(74,55,40,0.15); border-radius: 8px; font-size: 12px; font-family: inherit; outline: none; resize: vertical; margin-bottom: 6px; }
+.admin-inquiry-reply-box textarea:focus { border-color: #b5825a; }
+.admin-inquiry-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-inquiry-actions .btn { flex: 0 1 auto; padding: 6px 14px; font-size: 11px; border-radius: 8px; }
+.admin-inquiry-reply-list { margin-top: 8px; }
+.admin-inquiry-reply-item { padding: 8px 12px; background: #fff; border-radius: 8px; border-left: 3px solid #b5825a; margin-bottom: 6px; }
+.admin-inquiry-reply-from { font-size: 10px; font-weight: 700; color: #b5825a; }
+.admin-inquiry-reply-text { font-size: 12px; color: #4a3c31; margin: 2px 0; }
+.admin-inquiry-reply-time { font-size: 10px; color: #8c7e73; }
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 10px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; vertical-align: middle; }

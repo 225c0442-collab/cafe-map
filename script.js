@@ -581,6 +581,7 @@ L.Control.CurrentLocation = L.Control.extend({
 new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 var CHANGELOG = [
+  { date: '2026-07-16', time: '15:00', text: '<b>問い合わせ機能・アカウント削除機能を追加</b><ul><li>一般ユーザーが管理者に問い合わせを送信できる機能</li><li>管理パネルに問い合わせタブを追加（閲覧・返信・解決）</li><li>管理パネルにアカウント削除機能を追加</li><li>未読問い合わせバッジを管理タブに表示</li></ul>' },
   { date: '2026-07-16', time: '13:30', text: '<b>カフェデータの精度検証と修正</b><ul><li>カフェ・ド・クリエ渋谷店（存在確認できず削除）</li><li>TUBOCAFE→TUBO CAFEに名称修正、住所を旭町12-6に訂正</li><li>名曲喫茶カオリ座の住所を百人町1-23-19に詳細化</li></ul>' },
   { date: '2026-07-16', time: '13:30', text: '<b>管理パネル追加・アクセスカウンターをヘッダーに移動</b><ul><li>開発者用管理パネル（ユーザーBAN機能）を追加</li><li>アクセスカウンターをヘッダー内バッジに統合</li><li>BANされたユーザーの操作を制限</li></ul>' },
   { date: '2026-07-15', time: '21:30', text: '<b>新宿・百人町・天龍村・八王子・みなみ野にカフェを追加</b><ul><li>新宿: アナログシンジュク、アティックルーム</li><li>百人町: ゆめいろcafe、SOOM CAFE、名曲喫茶カオリ座</li><li>天龍村(長野): バードPaPa、龍の道、WACHI CAFEさとね</li><li>八王子: 八王子珈琲店、Cafe Anri Matisse、TUBOCAFE</li><li>八王子みなみ野: 高倉町珈琲、タリーズ、373-DINING、BEANS TIME</li><li>新エリアのカフェを地図で表示可能に</li></ul>' },
@@ -918,5 +919,277 @@ updateAuthUI = function (session) {
   if (session && currentUserId && isUserBanned(currentUserId)) {
     showToast('このアカウントはBANされています。一部機能が制限されます。');
   }
+  var inquiryBtn = document.getElementById('inquiryBtn');
+  if (session && currentUserId) { inquiryBtn.style.display = ''; } else { inquiryBtn.style.display = 'none'; }
+};
+
+// ===== 問い合わせ機能 =====
+var INQUIRIES_CAFE_ID = 56;
+var inquiryModal = document.getElementById('inquiryModal');
+var inquiryBody = document.getElementById('inquiryBody');
+var inquiryHistory = document.getElementById('inquiryHistory');
+var inquiryBadge = document.getElementById('inquiryBadge');
+
+function loadInquiries() {
+  return supabase.from('cafes').select('comment').eq('id', INQUIRIES_CAFE_ID).limit(1).then(function (res) {
+    if (res.data && res.data.length) {
+      try { var d = JSON.parse(res.data[0].comment || '{}'); return d.inquiries || []; } catch (e) { return []; }
+    }
+    return [];
+  });
+}
+
+function saveInquiries(inquiries) {
+  supabase.from('cafes').update({ comment: JSON.stringify({ inquiries: inquiries }) }).eq('id', INQUIRIES_CAFE_ID).then();
+}
+
+function renderInquiryHistory() {
+  inquiryHistory.innerHTML = '<div class="inquiry-history-title">送信履歴</div>';
+  loadInquiries().then(function (inquiries) {
+    var mine = inquiries.filter(function (i) { return i.user_id === currentUserId; });
+    if (!mine.length) { inquiryHistory.innerHTML += '<div class="inquiry-empty">送信した問い合わせはありません</div>'; return; }
+    mine.sort(function (a, b) { return b.id - a.id; });
+    mine.forEach(function (inq) {
+      var html = '<div class="inquiry-item">' +
+        '<div class="inquiry-item-header">' +
+          '<span class="inquiry-item-status ' + inq.status + '">' + (inq.status === 'open' ? '受付中' : '解決済み') + '</span>' +
+          '<span class="inquiry-item-time">' + new Date(inq.time).toLocaleString('ja-JP') + '</span>' +
+        '</div>' +
+        '<div class="inquiry-item-text">' + escHtml(inq.text) + '</div>';
+      if (inq.replies && inq.replies.length) {
+        inq.replies.forEach(function (r) {
+          html += '<div class="inquiry-reply"><label>' + (r.from === 'admin' ? '管理者からの返信' : 'あなたの返信') + '</label><p>' + escHtml(r.text) + '</p><div class="inquiry-reply-time">' + new Date(r.time).toLocaleString('ja-JP') + '</div></div>';
+        });
+      }
+      html += '</div>';
+      inquiryHistory.innerHTML += html;
+    });
+  });
+}
+
+function updateInquiryBadge() {
+  loadInquiries().then(function (inquiries) {
+    var open = inquiries.filter(function (i) { return i.status === 'open'; }).length;
+    if (open > 0) { inquiryBadge.textContent = open; inquiryBadge.style.display = ''; } else { inquiryBadge.style.display = 'none'; }
+  });
+}
+
+document.getElementById('inquiryBtn').addEventListener('click', function () {
+  inquiryModal.classList.add('open');
+  renderInquiryHistory();
+});
+
+document.getElementById('inquiryClose').addEventListener('click', function () { inquiryModal.classList.remove('open'); });
+inquiryModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+
+document.getElementById('inquirySendBtn').addEventListener('click', function () {
+  if (!requireLogin()) return;
+  var text = document.getElementById('inquiryText').value.trim();
+  if (!text) { showToast('問い合わせ内容を入力してください'); return; }
+  loadInquiries().then(function (inquiries) {
+    var maxId = inquiries.reduce(function (m, i) { return Math.max(m, i.id || 0); }, 0);
+    inquiries.push({
+      id: maxId + 1,
+      user_id: currentUserId,
+      username: currentUsername || '名無し',
+      text: text,
+      time: new Date().toISOString(),
+      status: 'open',
+      replies: []
+    });
+    saveInquiries(inquiries);
+    document.getElementById('inquiryText').value = '';
+    showToast('問い合わせを送信しました');
+    renderInquiryHistory();
+    updateInquiryBadge();
+  });
+});
+
+// ===== 管理パネル タブ切り替え =====
+document.querySelectorAll('.admin-tab').forEach(function (tab) {
+  tab.addEventListener('click', function () {
+    document.querySelectorAll('.admin-tab').forEach(function (t) { t.classList.remove('active'); });
+    document.querySelectorAll('.admin-tab-content').forEach(function (c) { c.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('adminTab' + tab.getAttribute('data-tab').replace(/^\w/, function (c) { return c.toUpperCase(); })).classList.add('active');
+    if (tab.getAttribute('data-tab') === 'inquiries') {
+      renderAdminInquiries();
+      updateInquiryBadge();
+    }
+  });
+});
+
+// ===== 管理パネル 問い合わせ管理 =====
+function renderAdminInquiries() {
+  var list = document.getElementById('adminInquiryList');
+  list.innerHTML = '<div style="text-align:center;color:#8c7e73;font-size:13px;padding:20px 0;">読み込み中...</div>';
+  loadInquiries().then(function (inquiries) {
+    if (!inquiries.length) { list.innerHTML = '<div class="inquiry-empty">問い合わせはありません</div>'; return; }
+    inquiries.sort(function (a, b) { return b.id - a.id; });
+    var html = '';
+    inquiries.forEach(function (inq) {
+      var userLabel = inq.username + ' (' + inq.user_id.substring(0, 8) + '...)';
+      var replyHtml = '';
+      if (inq.replies && inq.replies.length) {
+        inq.replies.forEach(function (r) {
+          replyHtml += '<div class="admin-inquiry-reply-item"><div class="admin-inquiry-reply-from">' + (r.from === 'admin' ? '管理者' : escHtml(inq.username)) + '</div><div class="admin-inquiry-reply-text">' + escHtml(r.text) + '</div><div class="admin-inquiry-reply-time">' + new Date(r.time).toLocaleString('ja-JP') + '</div></div>';
+        });
+      }
+      html += '<div class="admin-inquiry-card" data-inquiry-id="' + inq.id + '">' +
+        '<div class="admin-inquiry-header">' +
+          '<span class="admin-inquiry-user">' + escHtml(userLabel) + '</span>' +
+          '<span class="inquiry-item-status ' + inq.status + '">' + (inq.status === 'open' ? '受付中' : '解決済み') + '</span>' +
+          '<span class="inquiry-item-time">' + new Date(inq.time).toLocaleString('ja-JP') + '</span>' +
+        '</div>' +
+        '<div class="admin-inquiry-text">' + escHtml(inq.text) + '</div>' +
+        '<div class="admin-inquiry-reply-list">' + replyHtml + '</div>';
+      if (inq.status === 'open') {
+        html += '<div class="admin-inquiry-reply-box">' +
+          '<textarea placeholder="返信を入力..."></textarea>' +
+          '<div class="admin-inquiry-actions">' +
+            '<button class="btn btn-primary admin-inquiry-reply-btn" data-inquiry-id="' + inq.id + '">返信</button>' +
+            '<button class="btn btn-cancel admin-inquiry-close-btn" data-inquiry-id="' + inq.id + '">解決済みにする</button>' +
+          '</div></div>';
+      }
+      html += '</div>';
+    });
+    list.innerHTML = html;
+
+    list.querySelectorAll('.admin-inquiry-reply-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = parseInt(btn.getAttribute('data-inquiry-id'), 10);
+        var textarea = btn.parentNode.parentNode.querySelector('textarea');
+        var text = textarea.value.trim();
+        if (!text) { showToast('返信内容を入力してください'); return; }
+        loadInquiries().then(function (inquiries) {
+          var inq = inquiries.find(function (i) { return i.id === id; });
+          if (!inq) { showToast('問い合わせが見つかりません'); return; }
+          if (!inq.replies) inq.replies = [];
+          inq.replies.push({ from: 'admin', text: text, time: new Date().toISOString() });
+          saveInquiries(inquiries);
+          showToast('返信しました');
+          renderAdminInquiries();
+          updateInquiryBadge();
+        });
+      });
+    });
+
+    list.querySelectorAll('.admin-inquiry-close-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = parseInt(btn.getAttribute('data-inquiry-id'), 10);
+        loadInquiries().then(function (inquiries) {
+          var inq = inquiries.find(function (i) { return i.id === id; });
+          if (!inq) { showToast('問い合わせが見つかりません'); return; }
+          inq.status = 'closed';
+          saveInquiries(inquiries);
+          showToast('解決済みにしました');
+          renderAdminInquiries();
+          updateInquiryBadge();
+        });
+      });
+    });
+  });
+}
+
+// ===== 管理パネル アカウント削除 =====
+function deleteUserAccount(uid, username) {
+  if (!confirm('このユーザーのアカウントを削除しますか？\n\n（プロフィール・いいね・操作ログが削除されます。元に戻せません）')) return;
+  Promise.all([
+    supabase.from('profiles').delete().eq('id', uid),
+    supabase.from('likes').delete().eq('user_id', uid),
+    supabase.from('action_log').delete().eq('username', username || '')
+  ]).then(function () {
+    // BANリストからも削除
+    if (bannedIds.indexOf(uid) !== -1) {
+      bannedIds = bannedIds.filter(function (id) { return id !== uid; });
+      saveAdminBans();
+    }
+    // 管理者リストからも削除
+    if (adminIds.indexOf(uid) !== -1) {
+      adminIds = adminIds.filter(function (id) { return id !== uid; });
+      saveAdminList();
+    }
+    showToast('アカウントを削除しました');
+    renderAdminUserList();
+  }).catch(function () { showToast('削除に失敗しました'); });
+}
+
+// renderAdminUserList に削除ボタンを追加（上書き）
+var _origRenderAdminUserList = renderAdminUserList;
+renderAdminUserList = function () {
+  supabase.from('profiles').select('*').then(function (res) {
+    if (res.error) { adminUserList.innerHTML = '<div class="list-empty">読み込みエラー</div>'; return; }
+    var users = res.data || [];
+    var html = '';
+    users.forEach(function (u) {
+      var isBanned = isUserBanned(u.id);
+      var isAdminUser = adminIds.indexOf(u.id) !== -1;
+      var rowClass = 'admin-user-row' + (isBanned ? ' admin-user-row-banned' : '');
+      var badges = '';
+      if (isAdminUser) badges = '<span class="admin-user-badge" style="background:#efe8e1;color:#966642;">管理者</span>';
+      if (isBanned) badges += '<span class="admin-user-badge admin-user-badge-banned">BANNED</span>';
+
+      html += '<div class="' + rowClass + '">' +
+        '<div class="admin-user-info">' +
+        '<div class="admin-user-name">' + (u.username || '(ユーザーネーム未設定)') + badges + '</div>' +
+        '<div class="admin-user-id">' + u.id + '</div>' +
+        '</div><div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">';
+
+      if (!isBanned) {
+        html += '<button class="admin-btn-ban admin-btn-ban-ban" data-uid="' + u.id + '" data-action="ban">BAN</button>';
+      } else {
+        html += '<button class="admin-btn-ban admin-btn-ban-unban" data-uid="' + u.id + '" data-action="unban">解除</button>';
+      }
+
+      if (isAdminUser) {
+        if (u.id !== currentUserId) {
+          html += '<button class="admin-btn-ban admin-btn-ban-ban" data-uid="' + u.id + '" data-action="demote">管理者解除</button>';
+        }
+      } else {
+        html += '<button class="admin-btn-ban admin-btn-ban-unban" data-uid="' + u.id + '" data-action="promote">管理者追加</button>';
+      }
+
+      html += '<button class="admin-btn-delete" data-uid="' + u.id + '" data-username="' + (u.username || '') + '">削除</button>';
+
+      html += '</div></div>';
+    });
+    if (!users.length) html = '<div class="list-empty">登録ユーザーはいません</div>';
+    adminUserList.innerHTML = html;
+
+    adminUserList.querySelectorAll('.admin-btn-ban').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var uid = btn.getAttribute('data-uid');
+        var action = btn.getAttribute('data-action');
+
+        if (action === 'ban') {
+          if (bannedIds.indexOf(uid) === -1) bannedIds.push(uid);
+          saveAdminBans();
+          renderAdminUserList();
+          showToast('BANしました');
+        } else if (action === 'unban') {
+          bannedIds = bannedIds.filter(function (id) { return id !== uid; });
+          saveAdminBans();
+          renderAdminUserList();
+          showToast('BANを解除しました');
+        } else if (action === 'promote') {
+          if (adminIds.indexOf(uid) === -1) adminIds.push(uid);
+          saveAdminList();
+          renderAdminUserList();
+          showToast('管理者に追加しました');
+        } else if (action === 'demote') {
+          adminIds = adminIds.filter(function (id) { return id !== uid; });
+          saveAdminList();
+          renderAdminUserList();
+          showToast('管理者を解除しました');
+        }
+      });
+    });
+
+    adminUserList.querySelectorAll('.admin-btn-delete').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        deleteUserAccount(btn.getAttribute('data-uid'), btn.getAttribute('data-username'));
+      });
+    });
+  });
 };
 
