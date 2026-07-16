@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Fix Cafe Data</title></head><body>
+<h2>渋谷カフェマップ 座標修正ツール</h2>
+<p>各カフェの住所を Nominatim でジオコーディングし、現在の座標と比較してズレがあれば修正します。</p>
+<pre id="log"></pre>
+<script>
+const log = document.getElementById('log');
+function logMsg(m) { log.textContent += m + '\n'; }
+
+const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTMxOTMsImV4cCI6MjA5OTU4OTE5M30.1ew82vNMtwqqm97-neRxW21hHTW4LH2NmbNZ230rppU';
+const BASE = 'https://nwlfxjtunbqjkwpiaury.supabase.co';
+const HEADERS = { 'apikey': API_KEY, 'Content-Type': 'application/json' };
+
+async function api(path, opts) {
+  var res = await fetch(BASE + path, Object.assign({ headers: HEADERS }, opts));
+  if (!res.ok) { var txt = await res.text(); throw new Error(res.status + ' ' + txt); }
+  return res;
+}
+
+async function geocode(address) {
+  var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address + ' 日本') + '&limit=1';
+  var res = await fetch(url, { headers: { 'User-Agent': 'cafe-map/1.0' } });
+  var data = await res.json();
+  if (data && data.length) {
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  }
+  return null;
+}
+
+async function main() {
+  logMsg('ログイン中...');
+  var loginRes = await api('/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'test@gmail.com', password: 'kou17217' })
+  });
+  var loginData = await loginRes.json();
+  var token = loginData.access_token;
+  var authHeaders = { 'apikey': API_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  logMsg('ログイン完了');
+
+  // 全カフェを取得
+  var { data: cafes, error } = await api('/rest/v1/cafes?select=id,name,address,lat,lng&order=id', { headers: authHeaders }).then(function(r) { return r.json(); });
+  if (!cafes || !cafes.length) { logMsg('カフェデータが見つかりません'); return; }
+
+  var fixed = 0;
+  for (var i = 0; i < cafes.length; i++) {
+    var cafe = cafes[i];
+    if (cafe.id >= 53) continue; // システムレコードはスキップ
+    if (!cafe.address) { logMsg('SKIP id=' + cafe.id + ': 住所なし'); continue; }
+
+    logMsg('id=' + cafe.id + ' ' + cafe.name);
+    logMsg('  住所: ' + cafe.address);
+    logMsg('  現在: ' + cafe.lat + ', ' + cafe.lng);
+
+    // Nominatim でジオコーディング
+    var coord = await geocode(cafe.address);
+    if (!coord) { logMsg('  → ジオコーディング失敗'); continue; }
+
+    // Nominatimへの負荷軽減
+    await new Promise(function(r) { setTimeout(r, 1100); });
+
+    var latDiff = Math.abs(coord.lat - cafe.lat);
+    var lngDiff = Math.abs(coord.lng - cafe.lng);
+
+    if (latDiff > 0.001 || lngDiff > 0.001) {
+      logMsg('  → 修正: ' + coord.lat + ', ' + coord.lng + ' (diff=' + latDiff.toFixed(5) + ',' + lngDiff.toFixed(5) + ')');
+      await api('/rest/v1/cafes?id=eq.' + cafe.id, {
+        method: 'PATCH', headers: authHeaders,
+        body: JSON.stringify({ lat: coord.lat, lng: coord.lng })
+      });
+      fixed++;
+    } else {
+      logMsg('  → 問題なし');
+    }
+  }
+
+  logMsg('\n===== 完了 =====');
+  logMsg(fixed + '件の座標を修正しました。');
+  logMsg('マップをリロードしてください。');
+}
+main().catch(function(err) { logMsg('エラー: ' + err.message); });
+</script>
+</body></html>
