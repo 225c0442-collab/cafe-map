@@ -603,3 +603,25 @@ body.dark-mode .inquiry-empty { color: var(--text-tertiary); }
 .recommend-again { background: var(--accent); color: #fff; border: none; border-radius: 20px; padding: 10px 24px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 .recommend-again:hover { background: var(--accent-hover); transform: translateY(-1px); }
 .recommend-empty { text-align: center; color: var(--text-tertiary); padding: 40px 0; font-size: 13px; }
+
+/* ===== 関連アプリ管理 ===== */
+.admin-apps-list { max-height: 400px; overflow-y: auto; }
+.admin-app-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card-bg); margin-bottom: 8px; }
+.admin-app-info { flex: 1; min-width: 0; }
+.admin-app-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.admin-app-desc { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-app-url { font-size: 10px; color: var(--accent); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-app-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.admin-app-edit-btn { padding: 6px 12px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; background: #efe8e1; color: #5c4e43; transition: all 0.2s; }
+.admin-app-edit-btn:hover { background: #e3d7cb; }
+.admin-app-del-btn { padding: 6px 12px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; background: #fde8e8; color: #e74c3c; transition: all 0.2s; }
+.admin-app-del-btn:hover { background: #e74c3c; color: #fff; }
+.app-edit-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3000; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
+.app-edit-modal { background: var(--modal-bg); border-radius: 16px; padding: 24px; width: 90%; max-width: 420px; box-shadow: 0 15px 45px rgba(0,0,0,0.2); border: 1px solid var(--border); }
+.app-edit-modal h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+.app-edit-modal .form-group { margin-bottom: 12px; }
+.app-edit-modal .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; }
+.app-edit-modal .form-group input, .app-edit-modal .form-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 10px; font-size: 13px; font-family: inherit; outline: none; background: var(--input-bg); color: var(--text-primary); }
+.app-edit-modal .form-group input:focus, .app-edit-modal .form-group select:focus { border-color: var(--accent); }
+.app-edit-modal .form-actions { display: flex; gap: 8px; margin-top: 16px; }
+.app-edit-modal .form-actions .btn { flex: 1; padding: 10px 0; font-size: 13px; }

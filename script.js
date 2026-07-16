@@ -815,6 +815,17 @@ document.getElementById('appsModal').addEventListener('click', function (e) {
   if (e.target === this) this.classList.remove('open');
 });
 
+// 動的レンダリングされた app-link-card のクリック処理（onclick非推奨のためイベントデリゲーション）
+document.getElementById('appsBody').addEventListener('click', function (e) {
+  var card = e.target.closest('.app-link-card');
+  if (!card) return;
+  var idx = Array.from(this.children).indexOf(card);
+  var app = appLinks[idx];
+  if (!app) return;
+  if (app.target === 'self') { location.href = app.url; }
+  else { window.open(app.url, '_blank'); }
+});
+
 // ===== 管理パネル =====
 var ADMINS_CAFE_ID = 55;
 var BANS_CAFE_ID = 54;
@@ -1423,3 +1434,115 @@ updateAuthUI = function (session) {
     likesBtn.style.display = 'none';
   }
 };
+
+// ===== 関連アプリ管理 (Supabase cafes id=58) =====
+var APPS_CAFE_ID = 58;
+var appLinks = [];
+
+function loadApps() {
+  return supabase.from('cafes').select('comment').eq('id', APPS_CAFE_ID).limit(1).then(function (res) {
+    if (res.data && res.data.length) {
+      try { var d = JSON.parse(res.data[0].comment || '{}'); appLinks = d.apps || []; } catch (e) { appLinks = []; }
+    } else { appLinks = []; }
+    renderAppsModal();
+    renderAdminApps();
+  });
+}
+
+function saveApps() {
+  supabase.from('cafes').update({ comment: JSON.stringify({ apps: appLinks }) }).eq('id', APPS_CAFE_ID).then();
+}
+
+function renderAppsModal() {
+  var body = document.getElementById('appsBody');
+  if (!appLinks.length) { body.innerHTML = '<div style="text-align:center;color:#8c7e73;padding:30px 0;font-size:13px;">関連アプリはありません</div>'; return; }
+  body.innerHTML = appLinks.map(function (a) {
+    return '<div class="app-link-card">' +
+      '<div class="app-link-info">' +
+        '<div class="app-link-title">' + escHtml(a.title) + '</div>' +
+        '<div class="app-link-desc">' + escHtml(a.desc) + '</div>' +
+      '</div><div class="app-link-arrow">→</div></div>';
+  }).join('');
+}
+
+function renderAdminApps() {
+  var list = document.getElementById('adminAppsList');
+  if (!list) return;
+  if (!appLinks.length) { list.innerHTML = '<div class="list-empty">登録されたアプリはありません</div>'; return; }
+  list.innerHTML = appLinks.map(function (a, i) {
+    return '<div class="admin-app-card" data-index="' + i + '">' +
+      '<div class="admin-app-info">' +
+        '<div class="admin-app-title">' + escHtml(a.title) + '</div>' +
+        '<div class="admin-app-desc">' + escHtml(a.desc) + '</div>' +
+        '<div class="admin-app-url">' + escHtml(a.url) + '</div>' +
+      '</div>' +
+      '<div class="admin-app-actions">' +
+        '<button class="admin-app-edit-btn" data-index="' + i + '">編集</button>' +
+        '<button class="admin-app-del-btn" data-index="' + i + '">削除</button>' +
+      '</div></div>';
+  }).join('');
+  list.querySelectorAll('.admin-app-edit-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var i = parseInt(btn.getAttribute('data-index'), 10);
+      showAppEditModal(i);
+    });
+  });
+  list.querySelectorAll('.admin-app-del-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var i = parseInt(btn.getAttribute('data-index'), 10);
+      if (!confirm('「' + appLinks[i].title + '」を削除しますか？')) return;
+      appLinks.splice(i, 1);
+      saveApps();
+      renderAdminApps();
+      renderAppsModal();
+      showToast('削除しました');
+    });
+  });
+}
+
+function showAppEditModal(index) {
+  var app = index >= 0 ? appLinks[index] : { title: '', desc: '', url: '', target: 'blank' };
+  var isNew = index < 0;
+  var overlay = document.createElement('div');
+  overlay.className = 'app-edit-overlay';
+  overlay.innerHTML =
+    '<div class="app-edit-modal">' +
+      '<h3>' + (isNew ? 'アプリを追加' : 'アプリを編集') + '</h3>' +
+      '<div class="form-group"><label>タイトル</label><input type="text" id="appEditTitle" value="' + escHtml(app.title) + '"></div>' +
+      '<div class="form-group"><label>説明</label><input type="text" id="appEditDesc" value="' + escHtml(app.desc) + '"></div>' +
+      '<div class="form-group"><label>URL</label><input type="text" id="appEditUrl" value="' + escHtml(app.url) + '"></div>' +
+      '<div class="form-group"><label>開き方</label><select id="appEditTarget"><option value="blank" ' + (app.target === 'blank' ? 'selected' : '') + '>新しいタブ</option><option value="self" ' + (app.target === 'self' ? 'selected' : '') + '>同じタブ</option></select></div>' +
+      '<div class="form-actions">' +
+        '<button class="btn btn-cancel" id="appEditCancel">キャンセル</button>' +
+        '<button class="btn btn-primary" id="appEditSave">保存</button>' +
+      '</div></div>';
+  document.body.appendChild(overlay);
+  document.getElementById('appEditCancel').addEventListener('click', function () { overlay.remove(); });
+  document.getElementById('appEditSave').addEventListener('click', function () {
+    var title = document.getElementById('appEditTitle').value.trim();
+    var desc = document.getElementById('appEditDesc').value.trim();
+    var url = document.getElementById('appEditUrl').value.trim();
+    var target = document.getElementById('appEditTarget').value;
+    if (!title || !url) { showToast('タイトルとURLは必須です'); return; }
+    if (isNew) { appLinks.push({ title: title, desc: desc, url: url, target: target }); }
+    else { appLinks[index] = { title: title, desc: desc, url: url, target: target }; }
+    saveApps();
+    renderAdminApps();
+    renderAppsModal();
+    overlay.remove();
+    showToast(isNew ? '追加しました' : '更新しました');
+  });
+}
+
+document.getElementById('adminAppAddBtn').addEventListener('click', function () { showAppEditModal(-1); });
+
+// 管理パネルタブ切り替えにappsを追加
+var _origTabClick = document.querySelector('.admin-tab[data-tab="apps"]');
+if (_origTabClick) {
+  _origTabClick.addEventListener('click', function () {
+    renderAdminApps();
+  });
+}
+
+// 初期読み込み
+loadApps();

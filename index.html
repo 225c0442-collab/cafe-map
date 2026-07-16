@@ -139,29 +139,7 @@
       <h2>関連アプリ</h2>
       <button class="modal-close" id="appsClose">×</button>
     </div>
-    <div class="modal-body">
-      <div class="app-link-card" onclick="location.href='../'">
-        <div class="app-link-info">
-          <div class="app-link-title">アプリ一覧に戻る</div>
-          <div class="app-link-desc">すべてのアプリが集まったポータルページを表示します。</div>
-        </div>
-        <div class="app-link-arrow">→</div>
-      </div>
-      <div class="app-link-card" onclick="window.open('https://225c0442-collab.github.io/WebProgramming/20260616/', '_blank')">
-        <div class="app-link-info">
-          <div class="app-link-title">TDL天気予報</div>
-          <div class="app-link-desc">東京ディズニーランドのリアルタイム気象情報を確認できます。</div>
-        </div>
-        <div class="app-link-arrow">→</div>
-      </div>
-      <div class="app-link-card" onclick="window.open('https://class.tama.net/u/p225C0442/20260519/omikuji.html', '_blank')">
-        <div class="app-link-info">
-          <div class="app-link-title">おみくじアプリ</div>
-          <div class="app-link-desc">今日の運勢とラッキープレイスをシンプルに占うことができます。</div>
-        </div>
-        <div class="app-link-arrow">→</div>
-      </div>
-    </div>
+    <div class="modal-body" id="appsBody"></div>
   </div>
 </div>
 
@@ -235,6 +213,7 @@
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="users">ユーザー管理</button>
         <button class="admin-tab" data-tab="inquiries">問い合わせ <span id="inquiryBadge" class="badge" style="display:none">0</span></button>
+        <button class="admin-tab" data-tab="apps">関連アプリ</button>
       </div>
       <div id="adminTabUsers" class="admin-tab-content active">
         <div class="admin-section">
@@ -246,6 +225,15 @@
         <div class="admin-section">
           <div class="admin-section-title">問い合わせ一覧</div>
           <div id="adminInquiryList" class="admin-inquiry-list"></div>
+        </div>
+      </div>
+      <div id="adminTabApps" class="admin-tab-content">
+        <div class="admin-section">
+          <div class="admin-section-title">関連アプリ管理</div>
+          <div id="adminAppsList" class="admin-apps-list"></div>
+          <div style="margin-top:12px">
+            <button class="btn btn-primary" id="adminAppAddBtn" style="flex:none;padding:8px 16px;font-size:12px">アプリを追加</button>
+          </div>
         </div>
       </div>
     </div>
