@@ -424,6 +424,7 @@ formToggle.addEventListener('click', function () {
   if (formPanel.classList.contains('open')) { closeForm(); } else { setFormMode('add'); openForm(); }
 });
 formCancel.addEventListener('click', function () { setFormMode('add'); closeForm(); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && formPanel.classList.contains('open')) { closeForm(); } });
 
 map.on('click', function (e) {
   if (editingId !== null) {
