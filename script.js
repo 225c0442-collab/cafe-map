@@ -4,11 +4,17 @@ const SUPABASE_URL = 'https://nwlfxjtunbqjkwpiaury.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTMxOTMsImV4cCI6MjA5OTU4OTE5M30.1ew82vNMtwqqm97-neRxW21hHTW4LH2NmbNZ230rppU';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+var COUNTER_ID = 53;
+var ADMINS_CAFE_ID = 55;
+var BANS_CAFE_ID = 54;
+var INQUIRIES_CAFE_ID = 56;
+var PHOTOS_CAFE_ID = 57;
+var APPS_CAFE_ID = 58;
+
 // アクセスカウンター (Supabase に保存)
 (function () {
   var el = document.getElementById('visitCount');
   if (!el) return;
-  var COUNTER_ID = 53;
   function updateDisplay(n) { el.textContent = (typeof n === 'number' ? n : 0).toLocaleString(); }
   updateDisplay(0);
   supabase.from('cafes').select('comment').eq('id', COUNTER_ID).limit(1).then(function (res) {
@@ -827,8 +833,6 @@ document.getElementById('appsBody').addEventListener('click', function (e) {
 });
 
 // ===== 管理パネル =====
-var ADMINS_CAFE_ID = 55;
-var BANS_CAFE_ID = 54;
 var adminBtn = document.getElementById('adminBtn');
 var adminModal = document.getElementById('adminModal');
 var adminBody = document.getElementById('adminBody');
@@ -971,7 +975,6 @@ updateAuthUI = function (session) {
 };
 
 // ===== 問い合わせ機能 =====
-var INQUIRIES_CAFE_ID = 56;
 var inquiryModal = document.getElementById('inquiryModal');
 var inquiryBody = document.getElementById('inquiryBody');
 var inquiryHistory = document.getElementById('inquiryHistory');
@@ -1264,8 +1267,6 @@ renderAdminUserList = function () {
 })();
 
 // ===== 写真機能 (Supabase cafes id=57) =====
-var PHOTOS_CAFE_ID = 57;
-
 function loadPhotoUrls() {
   return supabase.from('cafes').select('comment').eq('id', PHOTOS_CAFE_ID).limit(1).then(function (res) {
     if (res.data && res.data.length) {
@@ -1436,7 +1437,6 @@ updateAuthUI = function (session) {
 };
 
 // ===== 関連アプリ管理 (Supabase cafes id=58) =====
-var APPS_CAFE_ID = 58;
 var appLinks = [];
 
 function loadApps() {
