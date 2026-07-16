@@ -1399,9 +1399,14 @@ function showRecommend() {
       '<div style="margin-bottom:10px"><span class="open-indicator"><span class="dot ' + st.cls + '"></span><span style="font-size:13px;font-weight:700;color:var(--text-secondary)">' + st.label + '</span></span></div>' +
       tagsHtml +
       '<div class="recommend-desc">' + escHtml(pick.desc) + '</div>' +
-      '<button class="recommend-again" onclick="showRecommend()">もう一度引く</button>' +
-      '<button class="recommend-again" style="background:var(--text-tertiary);margin-left:8px" onclick="focusCafeOnMap(' + pick.id + ');document.getElementById(\'recommendModal\').classList.remove(\'open\')">地図で見る</button>' +
+      '<button class="recommend-again" id="recommendRetryBtn">もう一度引く</button>' +
+      '<button class="recommend-again" style="background:var(--text-tertiary);margin-left:8px" id="recommendMapBtn">地図で見る</button>' +
     '</div>';
+  document.getElementById('recommendRetryBtn').addEventListener('click', showRecommend);
+  document.getElementById('recommendMapBtn').addEventListener('click', function () {
+    focusCafeOnMap(pick.id);
+    recommendModal.classList.remove('open');
+  });
 }
 
 document.getElementById('recommendBtn').addEventListener('click', function () { recommendModal.classList.add('open'); showRecommend(); });
