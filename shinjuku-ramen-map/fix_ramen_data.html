@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Fix Ramen Data</title></head><body>
+<h2>新宿ラーメンマップ DB 修正ツール</h2>
+<p>このページを開くと自動的に以下の処理を実行します:</p>
+<ol>
+  <li>非実在店舗の削除（ID 12 テスト店, 13 麺屋 太陽, 15 麺処 楓, 16 塩専門 銀波, 17 つけ麺 匠家, 18 油そば 昇龍, 19 豚骨拉麺 魁, 22 潮らーめん 渚）</li>
+  <li>喜多方ラーメン 蔵 (id=20) の住所を正しいものに修正</li>
+  <li>味噌ラーメン 北の蔵 (id=21) の店名・住所を正しいものに修正</li>
+  <li>風雲児 の追加</li>
+</ol>
+<pre id="log"></pre>
+<script>
+const log = document.getElementById('log');
+function logMsg(m) { log.textContent += m + '\n'; }
+
+const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTMxOTMsImV4cCI6MjA5OTU4OTE5M30.1ew82vNMtwqqm97-neRxW21hHTW4LH2NmbNZ230rppU';
+const BASE = 'https://nwlfxjtunbqjkwpiaury.supabase.co';
+const HEADERS = { 'apikey': API_KEY, 'Content-Type': 'application/json' };
+
+async function api(path, opts) {
+  var res = await fetch(BASE + path, Object.assign({ headers: HEADERS }, opts));
+  if (!res.ok) { var txt = await res.text(); throw new Error(res.status + ' ' + txt); }
+  return res;
+}
+
+async function main() {
+  logMsg('ログイン中...');
+  var loginRes = await api('/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'test@gmail.com', password: 'kou17217' })
+  });
+  var loginData = await loginRes.json();
+  var token = loginData.access_token;
+  var authHeaders = { 'apikey': API_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  logMsg('ログイン完了');
+
+  // 1. Delete fake/non-existent shops
+  var deleteIds = [12, 13, 15, 16, 17, 18, 19, 22];
+  logMsg('削除処理開始: ID ' + deleteIds.join(', '));
+  for (var i = 0; i < deleteIds.length; i++) {
+    var id = deleteIds[i];
+    try {
+      await api('/rest/v1/ramen_shops?id=eq.' + id, { method: 'DELETE', headers: authHeaders });
+      logMsg('削除完了: ID=' + id);
+    } catch (e) {
+      logMsg('削除失敗 ID=' + id + ': ' + e.message);
+    }
+  }
+
+  // 2. Update 喜多方ラーメン 蔵 (id=20) - fix address
+  logMsg('喜多方ラーメン 蔵 (id=20) の住所修正中...');
+  await api('/rest/v1/ramen_shops?id=eq.20', {
+    method: 'PATCH', headers: authHeaders,
+    body: JSON.stringify({
+      address: '東京都新宿区新宿3-36-18 三協ビル2F',
+      lat: 35.6898406, lng: 139.7020164,
+      comment: '喜多方風あっさり醤油。ちぢれ麺とチャーシューが絶品。'
+    })
+  });
+  logMsg('喜多方ラーメン 蔵: OK');
+
+  // 3. Update 味噌ラーメン 北の蔵 (id=21) - fix name and address
+  logMsg('味噌ラーメン 北の蔵 (id=21) の修正中...');
+  await api('/rest/v1/ramen_shops?id=eq.21', {
+    method: 'PATCH', headers: authHeaders,
+    body: JSON.stringify({
+      name: '木桶仕込味噌らーめん 味噌蔵',
+      address: '東京都新宿区大久保1-7-20',
+      lat: 35.7010153, lng: 139.7056229,
+      comment: '木桶仕込みの味噌ラーメンが看板。コクと爽やかな後味が特徴。'
+    })
+  });
+  logMsg('味噌蔵: OK');
+
+  // 4. Add 風雲児
+  logMsg('風雲児 の追加中...');
+  await api('/rest/v1/ramen_shops', {
+    method: 'POST', headers: authHeaders,
+    body: JSON.stringify({
+      name: '風雲児',
+      address: '東京都渋谷区代々木2-14-3 北斗第一ビル1F',
+      lat: 35.6868718, lng: 139.6966395,
+      comment: '鶏白湯と魚介のWスープつけ麺が有名。新宿屈指の人気店。',
+      hours: '11:00-15:00/17:00-21:00',
+      tags: ['tsukemen', 'shoyu']
+    })
+  });
+  logMsg('風雲児: OK');
+
+  logMsg('\n全ての処理が完了しました。ラーメンマップをリロードしてください。');
+}
+main().catch(function(err) { logMsg('エラー: ' + err.message); });
+</script>
+</body></html>

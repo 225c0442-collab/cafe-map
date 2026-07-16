@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Fix Ramen Tags</title></head><body>
+<h3>Fixing sho-yu -> shoyu tags...</h3>
+<pre id="log"></pre>
+<script>
+const log = document.getElementById('log');
+function logMsg(m) { log.textContent += m + '\n'; }
+
+const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTMxOTMsImV4cCI6MjA5OTU4OTE5M30.1ew82vNMtwqqm97-neRxW21hHTW4LH2NmbNZ230rppU';
+const BASE = 'https://nwlfxjtunbqjkwpiaury.supabase.co';
+const HEADERS = { 'apikey': API_KEY, 'Content-Type': 'application/json' };
+
+async function api(path, opts) {
+  var res = await fetch(BASE + path, Object.assign({ headers: HEADERS }, opts));
+  if (!res.ok) { var txt = await res.text(); throw new Error(res.status + ' ' + txt); }
+  return res;
+}
+
+async function main() {
+  logMsg('Logging in...');
+  var loginRes = await api('/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'test@gmail.com', password: 'kou17217' })
+  });
+  var loginData = await loginRes.json();
+  var token = loginData.access_token;
+  var authHeaders = { 'apikey': API_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  logMsg('Logged in');
+
+  // Fix sho-yu -> shoyu for ids 14, 20
+  await api('/rest/v1/ramen_shops?id=eq.14', { method: 'PATCH', headers: authHeaders, body: JSON.stringify({ tags: ['shoyu'] }) });
+  logMsg('id=14 (らーめん 桜花): OK');
+  await api('/rest/v1/ramen_shops?id=eq.20', { method: 'PATCH', headers: authHeaders, body: JSON.stringify({ tags: ['shoyu'] }) });
+  logMsg('id=20 (喜多方ラーメン 蔵): OK');
+
+  logMsg('\nDone! Refresh the ramen map page.');
+}
+main().catch(function(err) { logMsg('Error: ' + err.message); });
+</script>
+</body></html>

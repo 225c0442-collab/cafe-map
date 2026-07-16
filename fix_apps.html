@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Fix Apps</title></head><body>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const supabase = createClient(
+  'https://nwlfxjtunbqjkwpiaury.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTMxOTMsImV4cCI6MjA5OTU4OTE5M30.1ew82vNMtwqqm97-neRxW21hHTW4LH2NmbNZ230rppU'
+);
+
+// First login
+const { data: { session }, error: loginErr } = await supabase.auth.signInWithPassword({
+  email: 'test@gmail.com',
+  password: 'kou17217'
+});
+if (loginErr) { document.body.textContent = 'Login error: ' + loginErr.message; return; }
+
+// Update cafes id=58
+const cafesApps = {
+  apps: [
+    { title: '渋谷カフェマップ', desc: '渋谷のカフェをマップで探索', url: '../', target: 'self' },
+    { title: 'TDL天気予報', desc: '東京ディズニーランドの天気予報', url: 'tdl-weather/', target: 'self' },
+    { title: 'おみくじ', desc: '今日の運勢を占うおみくじ', url: 'https://class.tama.net/u/p225C0442/20260519/omikuji.html', target: 'blank' },
+    { title: '新宿ラーメンマップ', desc: '新宿のラーメン店をマップで探索', url: 'shinjuku-ramen-map/', target: 'self' }
+  ]
+};
+var { error: e1 } = await supabase.from('cafes').update({ comment: JSON.stringify(cafesApps) }).eq('id', 58);
+console.log('cafes update:', e1);
+
+// Update ramen_shops id=58
+const ramenApps = {
+  apps: [
+    { title: '渋谷カフェマップ', desc: '渋谷のカフェをマップで探索', url: '../', target: 'self' },
+    { title: 'TDL天気予報', desc: '東京ディズニーランドの天気予報', url: '../tdl-weather/', target: 'self' },
+    { title: 'おみくじ', desc: '今日の運勢を占うおみくじ', url: 'https://class.tama.net/u/p225C0442/20260519/omikuji.html', target: 'blank' }
+  ]
+};
+var { error: e2 } = await supabase.from('ramen_shops').update({ comment: JSON.stringify(ramenApps) }).eq('id', 58);
+console.log('ramen_shops update:', e2);
+
+document.body.textContent = 'Done! cafes: ' + (e1 ? e1.message : 'OK') + ', ramen_shops: ' + (e2 ? e2.message : 'OK');
+</script>
+</body></html>

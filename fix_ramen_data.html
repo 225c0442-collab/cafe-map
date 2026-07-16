@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Fix Ramen Data</title></head><body>
+<h3>Fixing ramen data...</h3>
+<pre id="log"></pre>
+<script>
+const log = document.getElementById('log');
+function logMsg(m) { log.textContent += m + '\n'; }
+
+const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGZ4anR1bmJxamt3cGlhdXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTMxOTMsImV4cCI6MjA5OTU4OTE5M30.1ew82vNMtwqqm97-neRxW21hHTW4LH2NmbNZ230rppU';
+const BASE = 'https://nwlfxjtunbqjkwpiaury.supabase.co';
+const HEADERS = { 'apikey': API_KEY, 'Content-Type': 'application/json' };
+
+async function api(path, opts) {
+  var res = await fetch(BASE + path, Object.assign({ headers: HEADERS }, opts));
+  if (!res.ok) { var txt = await res.text(); throw new Error(res.status + ' ' + txt); }
+  return res;
+}
+
+async function main() {
+  logMsg('Logging in...');
+  var loginRes = await api('/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'test@gmail.com', password: 'kou17217' })
+  });
+  var loginData = await loginRes.json();
+  var token = loginData.access_token;
+  var authHeaders = { 'apikey': API_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  logMsg('Logged in');
+
+  // 1. Fix cafes id=58
+  logMsg('Updating cafes id=58...');
+  var cafesApps = { apps: [
+    { title: '渋谷カフェマップ', desc: '渋谷のカフェをマップで探索', url: '../', target: 'self' },
+    { title: 'TDL天気予報', desc: '東京ディズニーランドの天気予報', url: 'tdl-weather/', target: 'self' },
+    { title: 'おみくじ', desc: '今日の運勢を占うおみくじ', url: 'https://class.tama.net/u/p225C0442/20260519/omikuji.html', target: 'blank' },
+    { title: '新宿ラーメンマップ', desc: '新宿のラーメン店をマップで探索', url: 'shinjuku-ramen-map/', target: 'self' }
+  ]};
+  await api('/rest/v1/cafes?id=eq.58', { method: 'PATCH', headers: authHeaders, body: JSON.stringify({ comment: JSON.stringify(cafesApps) }) });
+  logMsg('cafes id=58: OK');
+
+  // 2. Fix ramen_shops id=58
+  logMsg('Updating ramen_shops id=58...');
+  var ramenApps = { apps: [
+    { title: '渋谷カフェマップ', desc: '渋谷のカフェをマップで探索', url: '../', target: 'self' },
+    { title: 'TDL天気予報', desc: '東京ディズニーランドの天気予報', url: '../tdl-weather/', target: 'self' },
+    { title: 'おみくじ', desc: '今日の運勢を占うおみくじ', url: 'https://class.tama.net/u/p225C0442/20260519/omikuji.html', target: 'blank' }
+  ]};
+  await api('/rest/v1/ramen_shops?id=eq.58', { method: 'PATCH', headers: authHeaders, body: JSON.stringify({ comment: JSON.stringify(ramenApps) }) });
+  logMsg('ramen_shops id=58: OK');
+
+  // 3. Delete garbled shops
+  logMsg('Deleting old garbled shops...');
+  await api('/rest/v1/ramen_shops?id=gte.2&id=lte.11', { method: 'DELETE', headers: authHeaders });
+  logMsg('Delete: OK');
+
+  // 4. Insert fresh shops
+  var shops = [
+    { name: '麺屋 太陽', address: '東京都新宿区新宿3-17-21', lat: 35.6906, lng: 139.7037, comment: '鶏白湯スープが自慢のラーメン店。濃厚な味わいが人気。', hours: '11:00-23:00', tags: ['tonkotsu'] },
+    { name: 'らーめん 桜花', address: '東京都新宿区西新宿1-1-1', lat: 35.6915, lng: 139.7010, comment: 'あっさり醤油スープが特徴。焼き豚も絶品。', hours: '11:30-22:00', tags: ['sho-yu'] },
+    { name: '麺処 楓', address: '東京都新宿区歌舞伎町1-5-3', lat: 35.6942, lng: 139.7025, comment: '濃厚味噌ラーメンが看板メニュー。ニンニク効いた一杯。', hours: '11:00-翌4:00', tags: ['miso'] },
+    { name: '塩専門 銀波', address: '東京都新宿区新宿3-28-10', lat: 35.6928, lng: 139.7050, comment: '透き通った塩スープ。トリュフオイルの香りが食欲をそそる。', hours: '11:30-21:30', tags: ['shio'] },
+    { name: 'つけ麺 匠家', address: '東京都新宿区新宿3-12-6', lat: 35.6935, lng: 139.7040, comment: '極太麺と濃厚魚介つけ汁の組み合わせ。並ぶ価値あり。', hours: '11:00-22:30', tags: ['tsukemen'] },
+    { name: '油そば 昇龍', address: '東京都新宿区西新宿1-12-1', lat: 35.6900, lng: 139.6995, comment: 'タレと油を絡めて食べる油そば専門店。ラー油と酢で味変を。', hours: '11:00-23:00', tags: ['abura'] },
+    { name: '豚骨拉麺 魁', address: '東京都新宿区新宿3-9-5', lat: 35.6918, lng: 139.7020, comment: '九州スタイルの豚骨ラーメン。白濁スープが濃厚。', hours: '10:00-翌2:00', tags: ['tonkotsu'] },
+    { name: '喜多方ラーメン 蔵', address: '東京都新宿区新宿3-23-1', lat: 35.6920, lng: 139.7060, comment: '喜多方風あっさり醤油。ちぢれ麺とチャーシューが絶品。', hours: '11:00-21:00', tags: ['sho-yu'] },
+    { name: '味噌ラーメン 北の蔵', address: '東京都新宿区歌舞伎町1-2-10', lat: 35.6938, lng: 139.7015, comment: '北海道味噌ベースの濃厚ラーメン。バターコーンも名物。', hours: '11:30-23:30', tags: ['miso'] },
+    { name: '潮らーめん 渚', address: '東京都新宿区西新宿1-3-7', lat: 35.6895, lng: 139.7005, comment: '瀬戸内産の塩を使った上品な味わい。透明スープが自慢。', hours: '11:00-22:00', tags: ['shio'] }
+  ];
+
+  for (var i = 0; i < shops.length; i++) {
+    var res = await api('/rest/v1/ramen_shops', { method: 'POST', headers: authHeaders, body: JSON.stringify(shops[i]) });
+    logMsg('Shop ' + (i+1) + ' ' + shops[i].name + ': OK');
+  }
+
+  logMsg('\nDone! Refresh the ramen map page.');
+}
+main().catch(function(err) { logMsg('Error: ' + err.message); });
+</script>
+</body></html>
