@@ -943,6 +943,12 @@ function saveInquiries(inquiries) {
   supabase.from('cafes').update({ comment: JSON.stringify({ inquiries: inquiries }) }).eq('id', INQUIRIES_CAFE_ID).then();
 }
 
+function inquiryStatusLabel(inq) {
+  if (inq.status === 'closed') return { cls: 'closed', label: '解決済み' };
+  if (inq.replies && inq.replies.some(function (r) { return r.from === 'admin'; })) return { cls: 'replied', label: '対処済み' };
+  return { cls: 'open', label: '未対処' };
+}
+
 function renderInquiryHistory() {
   inquiryHistory.innerHTML = '<div class="inquiry-history-title">送信履歴</div>';
   loadInquiries().then(function (inquiries) {
@@ -950,9 +956,10 @@ function renderInquiryHistory() {
     if (!mine.length) { inquiryHistory.innerHTML += '<div class="inquiry-empty">送信した問い合わせはありません</div>'; return; }
     mine.sort(function (a, b) { return b.id - a.id; });
     mine.forEach(function (inq) {
+      var st = inquiryStatusLabel(inq);
       var html = '<div class="inquiry-item">' +
         '<div class="inquiry-item-header">' +
-          '<span class="inquiry-item-status ' + inq.status + '">' + (inq.status === 'open' ? '受付中' : '解決済み') + '</span>' +
+          '<span class="inquiry-item-status ' + st.cls + '">' + st.label + '</span>' +
           '<span class="inquiry-item-time">' + new Date(inq.time).toLocaleString('ja-JP') + '</span>' +
         '</div>' +
         '<div class="inquiry-item-text">' + escHtml(inq.text) + '</div>';
@@ -969,8 +976,11 @@ function renderInquiryHistory() {
 
 function updateInquiryBadge() {
   loadInquiries().then(function (inquiries) {
-    var open = inquiries.filter(function (i) { return i.status === 'open'; }).length;
-    if (open > 0) { inquiryBadge.textContent = open; inquiryBadge.style.display = ''; } else { inquiryBadge.style.display = 'none'; }
+    var unhandled = inquiries.filter(function (i) {
+      if (i.status === 'closed') return false;
+      return !(i.replies && i.replies.some(function (r) { return r.from === 'admin'; }));
+    }).length;
+    if (unhandled > 0) { inquiryBadge.textContent = unhandled; inquiryBadge.style.display = ''; } else { inquiryBadge.style.display = 'none'; }
   });
 }
 
@@ -1028,6 +1038,7 @@ function renderAdminInquiries() {
     inquiries.sort(function (a, b) { return b.id - a.id; });
     var html = '';
     inquiries.forEach(function (inq) {
+      var st = inquiryStatusLabel(inq);
       var userLabel = inq.username + ' (' + inq.user_id.substring(0, 8) + '...)';
       var replyHtml = '';
       if (inq.replies && inq.replies.length) {
@@ -1038,7 +1049,7 @@ function renderAdminInquiries() {
       html += '<div class="admin-inquiry-card" data-inquiry-id="' + inq.id + '">' +
         '<div class="admin-inquiry-header">' +
           '<span class="admin-inquiry-user">' + escHtml(userLabel) + '</span>' +
-          '<span class="inquiry-item-status ' + inq.status + '">' + (inq.status === 'open' ? '受付中' : '解決済み') + '</span>' +
+          '<span class="inquiry-item-status ' + st.cls + '">' + st.label + '</span>' +
           '<span class="inquiry-item-time">' + new Date(inq.time).toLocaleString('ja-JP') + '</span>' +
         '</div>' +
         '<div class="admin-inquiry-text">' + escHtml(inq.text) + '</div>' +
