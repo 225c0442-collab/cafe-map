@@ -581,6 +581,7 @@ L.Control.CurrentLocation = L.Control.extend({
 new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 
 var CHANGELOG = [
+  { date: '2026-07-16', time: '13:30', text: '<b>管理パネル追加・アクセスカウンターをヘッダーに移動</b><ul><li>開発者用管理パネル（ユーザーBAN機能）を追加</li><li>アクセスカウンターをヘッダー内バッジに統合</li><li>BANされたユーザーの操作を制限</li></ul>' },
   { date: '2026-07-15', time: '21:30', text: '<b>新宿・百人町・天龍村・八王子・みなみ野にカフェを追加</b><ul><li>新宿: アナログシンジュク、アティックルーム</li><li>百人町: ゆめいろcafe、SOOM CAFE、名曲喫茶カオリ座</li><li>天龍村(長野): バードPaPa、龍の道、WACHI CAFEさとね</li><li>八王子: 八王子珈琲店、Cafe Anri Matisse、TUBOCAFE</li><li>八王子みなみ野: 高倉町珈琲、タリーズ、373-DINING、BEANS TIME</li><li>新エリアのカフェを地図で表示可能に</li></ul>' },
   { date: '2026-07-15', time: '19:30', text: '<b>関連アプリモーダル追加・ポータルサイト公開</b><ul><li>ヘッダーに「関連アプリ」ボタンを追加</li><li>TDL天気予報・おみくじアプリへのリンク</li><li>ポータルページ (Web Applications Portfolio) を公開</li></ul>' },
   { date: '2026-07-15', time: '18:20', text: '<b>位置決め時に仮ピン表示</b><ul><li>地図タップ時に青いプレビューマーカーが表示されるように</li></ul>' },
@@ -729,6 +730,7 @@ document.getElementById('actionLogModal').addEventListener('click', function (e)
 
 function requireLogin() {
   if (!currentEmail) { showToast('ログインが必要です。'); return false; }
+  if (checkBanAndWarn()) return false;
   return true;
 }
 
@@ -772,3 +774,101 @@ document.getElementById('appsClose').addEventListener('click', function () {
 document.getElementById('appsModal').addEventListener('click', function (e) {
   if (e.target === this) this.classList.remove('open');
 });
+
+// ===== 管理パネル =====
+var ADMIN_EMAIL = 'test@gmail.com';
+var BANS_CAFE_ID = 54;
+var bannedIds = [];
+var adminBtn = document.getElementById('adminBtn');
+var adminModal = document.getElementById('adminModal');
+var adminBody = document.getElementById('adminBody');
+var adminUserList = document.getElementById('adminUserList');
+
+function loadAdminBans() {
+  return supabase.from('cafes').select('comment').eq('id', BANS_CAFE_ID).limit(1).then(function (res) {
+    if (res.data && res.data.length) {
+      try { var d = JSON.parse(res.data[0].comment || '{}'); bannedIds = d.banned || []; } catch (e) { bannedIds = []; }
+    } else { bannedIds = []; }
+  });
+}
+
+function saveAdminBans() {
+  supabase.from('cafes').update({ comment: JSON.stringify({ banned: bannedIds }) }).eq('id', BANS_CAFE_ID).then();
+}
+
+function isUserBanned(uid) { return bannedIds.indexOf(uid) !== -1; }
+
+function checkBanAndWarn() {
+  if (currentUserId && isUserBanned(currentUserId)) {
+    showToast('このアカウントはBANされています');
+    return true;
+  }
+  return false;
+}
+
+function renderAdminUserList() {
+  supabase.from('profiles').select('*').then(function (res) {
+    if (res.error) { adminUserList.innerHTML = '<div class="list-empty">読み込みエラー</div>'; return; }
+    var users = res.data || [];
+    var html = '';
+    users.forEach(function (u) {
+      var isBanned = isUserBanned(u.id);
+      var rowClass = 'admin-user-row' + (isBanned ? ' admin-user-row-banned' : '');
+      var badgeHtml = isBanned ? '<span class="admin-user-badge admin-user-badge-banned">BANNED</span>' : '<span class="admin-user-badge">アクティブ</span>';
+      var btnHtml = isBanned
+        ? '<button class="admin-btn-ban admin-btn-ban-unban" data-uid="' + u.id + '" data-action="unban">解除</button>'
+        : '<button class="admin-btn-ban admin-btn-ban-ban" data-uid="' + u.id + '" data-action="ban">BAN</button>';
+      html += '<div class="' + rowClass + '">' +
+        '<div class="admin-user-info">' +
+        '<div class="admin-user-name">' + (u.username || '(ユーザーネーム未設定)') + badgeHtml + '</div>' +
+        '<div class="admin-user-id">' + u.id + '</div>' +
+        '</div>' +
+        btnHtml +
+        '</div>';
+    });
+    if (!users.length) html = '<div class="list-empty">登録ユーザーはいません</div>';
+    adminUserList.innerHTML = html;
+    adminUserList.querySelectorAll('.admin-btn-ban').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var uid = btn.getAttribute('data-uid');
+        var action = btn.getAttribute('data-action');
+        if (action === 'ban') {
+          if (bannedIds.indexOf(uid) === -1) bannedIds.push(uid);
+        } else {
+          bannedIds = bannedIds.filter(function (id) { return id !== uid; });
+        }
+        saveAdminBans();
+        renderAdminUserList();
+        showToast(action === 'ban' ? 'BANしました' : 'BANを解除しました');
+      });
+    });
+  });
+}
+
+function openAdminPanel() {
+  loadAdminBans().then(function () {
+    renderAdminUserList();
+    adminModal.classList.add('open');
+  });
+}
+
+document.getElementById('adminClose').addEventListener('click', function () { adminModal.classList.remove('open'); });
+adminModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+
+// 管理ボタンの表示制御（ログイン状態に応じて）
+function updateAdminBtn() {
+  adminBtn.style.display = (currentEmail === ADMIN_EMAIL) ? '' : 'none';
+}
+adminBtn.addEventListener('click', openAdminPanel);
+updateAdminBtn();
+
+// 既存の updateAuthUI に管理ボタン更新処理を追加
+var _origUpdateAuthUI = updateAuthUI;
+updateAuthUI = function (session) {
+  _origUpdateAuthUI(session);
+  updateAdminBtn();
+  if (session && currentUserId && isUserBanned(currentUserId)) {
+    showToast('このアカウントはBANされています。一部機能が制限されます。');
+  }
+};
+

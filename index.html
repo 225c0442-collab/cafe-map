@@ -13,17 +13,17 @@
 <div id="toastContainer" class="toast-container"></div>
 
 <div class="header">
-  <h1><span>Shibuya</span> Cafe Map</h1>
+  <h1><span>Shibuya</span> Cafe Map <span class="counter-badge" id="visitCount">-</span></h1>
   <div class="header-actions">
     <button class="header-btn" id="appsBtn">関連アプリ</button>
     <button class="header-btn" id="changelogBtn">更新ログ</button>
     <button class="header-btn" id="actionLogBtn">操作ログ</button>
+    <button class="header-btn" id="adminBtn" style="display:none">管理</button>
     <button class="header-btn" id="exportBtn">出力</button>
     <button class="header-btn" id="importBtn">読込</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
   </div>
 </div>
-<div class="counter-bar" id="counterBar">訪問者数: <span id="visitCount">-</span></div>
 
 <div class="auth-bar" id="authBar">
   <span id="authGreeting" style="font-size:13px;color:#5c4e43;white-space:nowrap">こんにちは、ゲストさん</span>
@@ -167,6 +167,21 @@
       <button class="modal-close" id="actionLogClose">×</button>
     </div>
     <div class="modal-body" id="actionLogBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adminModal">
+  <div class="modal-content modal-content-wide">
+    <div class="modal-header">
+      <h2>管理パネル</h2>
+      <button class="modal-close" id="adminClose">×</button>
+    </div>
+    <div class="modal-body" id="adminBody">
+      <div class="admin-section">
+        <div class="admin-section-title">登録ユーザー一覧</div>
+        <div id="adminUserList" class="admin-user-list"></div>
+      </div>
+    </div>
   </div>
 </div>
 
