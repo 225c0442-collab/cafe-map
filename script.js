@@ -810,6 +810,26 @@ loadPhotoUrls().then(function () { renderAllCafes(); renderList(); });
 // ===== 営業情報の定期更新（1分ごと） =====
 setInterval(function () { renderList(); }, 60000);
 
+// ===== 天気予報（渋谷） =====
+(function () {
+  var el = document.getElementById('weatherWidget');
+  if (!el) return;
+  var ICONS = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',56:'🌦️',57:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌦️',82:'🌦️',85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️' };
+  function fetchWeather() {
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=35.6580&longitude=139.7016&current_weather=true&timezone=Asia%2FTokyo')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.current_weather) return;
+        var w = d.current_weather;
+        var icon = ICONS[w.weathercode] || '🌤️';
+        el.innerHTML = '<span class="icon">' + icon + '</span><span class="temp">' + Math.round(w.temperature) + '°C</span>';
+      })
+      .catch(function () { /* ignore */ });
+  }
+  fetchWeather();
+  setInterval(fetchWeather, 600000);
+})();
+
 // ===== 関連アプリモーダルの表示制御 =====
 document.getElementById('appsBtn').addEventListener('click', function () {
   document.getElementById('appsModal').classList.add('open');

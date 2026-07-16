@@ -51,6 +51,13 @@ html, body { height: 100%; font-family: 'Plus Jakarta Sans', 'Noto Sans JP', -ap
 .header-actions { margin-left: auto; display: flex; gap: 8px; }
 .header-btn { background: var(--bg-raised); border: 1px solid var(--border-strong); border-radius: 20px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; font-family: inherit; }
 .header-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,67,63,0.2); }
+
+/* ===== 天気予報 ===== */
+.weather-widget { font-size: 13px; font-weight: 600; color: var(--text-primary); background: var(--bg-raised); border: 1px solid var(--border-strong); border-radius: 20px; padding: 8px 14px; white-space: nowrap; display: flex; align-items: center; gap: 4px; cursor: default; transition: all 0.25s; }
+.weather-widget:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.weather-widget .icon { font-size: 16px; line-height: 1; }
+.weather-widget .temp { font-variant-numeric: tabular-nums; }
+
 .counter-badge { display: inline-flex; align-items: center; justify-content: center; background: rgba(74, 55, 40, 0.08); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; color: #7d7269; margin-left: 4px; letter-spacing: 0.02em; line-height: 1.6; pointer-events: none; vertical-align: middle; white-space: nowrap; }
 .counter-badge::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 .auth-link { font-size: 11px; color: var(--text-tertiary); cursor: pointer; text-decoration: none; font-weight: 600; border-bottom: 1px dashed var(--text-tertiary); transition: color 0.2s; }

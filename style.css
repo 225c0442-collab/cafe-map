@@ -115,6 +115,12 @@ html, body {
 }
 .header-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(181, 130, 90, 0.2); }
 
+/* ===== 天気予報 ===== */
+.weather-widget { font-size: 13px; font-weight: 600; color: var(--text-primary); background: var(--bg-raised); border: 1px solid var(--border-strong); border-radius: 20px; padding: 8px 14px; white-space: nowrap; display: flex; align-items: center; gap: 4px; cursor: default; transition: all 0.25s; }
+.weather-widget:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.weather-widget .icon { font-size: 16px; line-height: 1; }
+.weather-widget .temp { font-variant-numeric: tabular-nums; }
+
 /* ===== アクセスカウンターバッジ ===== */
 .counter-badge {
   display: inline-flex; align-items: center; justify-content: center;
