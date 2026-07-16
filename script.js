@@ -45,6 +45,10 @@ let editingId = null;
 let activeTagFilter = null;
 let searchQuery = '';
 
+var adminIds = [];
+var bannedIds = [];
+var cafePhotoUrls = {};
+
 const map = L.map('map', { zoomControl: true }).setView([35.6605, 139.7000], 15);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -814,8 +818,6 @@ document.getElementById('appsModal').addEventListener('click', function (e) {
 // ===== 管理パネル =====
 var ADMINS_CAFE_ID = 55;
 var BANS_CAFE_ID = 54;
-var adminIds = [];
-var bannedIds = [];
 var adminBtn = document.getElementById('adminBtn');
 var adminModal = document.getElementById('adminModal');
 var adminBody = document.getElementById('adminBody');
@@ -1252,7 +1254,6 @@ renderAdminUserList = function () {
 
 // ===== 写真機能 (Supabase cafes id=57) =====
 var PHOTOS_CAFE_ID = 57;
-var cafePhotoUrls = {};
 
 function loadPhotoUrls() {
   return supabase.from('cafes').select('comment').eq('id', PHOTOS_CAFE_ID).limit(1).then(function (res) {
