@@ -776,13 +776,28 @@ document.getElementById('appsModal').addEventListener('click', function (e) {
 });
 
 // ===== 管理パネル =====
-var ADMIN_EMAIL = 'test@gmail.com';
+var ADMINS_CAFE_ID = 55;
 var BANS_CAFE_ID = 54;
+var adminIds = [];
 var bannedIds = [];
 var adminBtn = document.getElementById('adminBtn');
 var adminModal = document.getElementById('adminModal');
 var adminBody = document.getElementById('adminBody');
 var adminUserList = document.getElementById('adminUserList');
+
+function isAdmin() { return adminIds.indexOf(currentUserId) !== -1; }
+
+function loadAdminList() {
+  return supabase.from('cafes').select('comment').eq('id', ADMINS_CAFE_ID).limit(1).then(function (res) {
+    if (res.data && res.data.length) {
+      try { var d = JSON.parse(res.data[0].comment || '{}'); adminIds = d.admins || []; } catch (e) { adminIds = []; }
+    } else { adminIds = []; }
+  });
+}
+
+function saveAdminList() {
+  supabase.from('cafes').update({ comment: JSON.stringify({ admins: adminIds }) }).eq('id', ADMINS_CAFE_ID).then();
+}
 
 function loadAdminBans() {
   return supabase.from('cafes').select('comment').eq('id', BANS_CAFE_ID).limit(1).then(function (res) {
@@ -813,40 +828,70 @@ function renderAdminUserList() {
     var html = '';
     users.forEach(function (u) {
       var isBanned = isUserBanned(u.id);
+      var isAdminUser = adminIds.indexOf(u.id) !== -1;
       var rowClass = 'admin-user-row' + (isBanned ? ' admin-user-row-banned' : '');
-      var badgeHtml = isBanned ? '<span class="admin-user-badge admin-user-badge-banned">BANNED</span>' : '<span class="admin-user-badge">アクティブ</span>';
-      var btnHtml = isBanned
-        ? '<button class="admin-btn-ban admin-btn-ban-unban" data-uid="' + u.id + '" data-action="unban">解除</button>'
-        : '<button class="admin-btn-ban admin-btn-ban-ban" data-uid="' + u.id + '" data-action="ban">BAN</button>';
+      var badges = '';
+      if (isAdminUser) badges = '<span class="admin-user-badge" style="background:#efe8e1;color:#966642;">管理者</span>';
+      if (isBanned) badges += '<span class="admin-user-badge admin-user-badge-banned">BANNED</span>';
+
       html += '<div class="' + rowClass + '">' +
         '<div class="admin-user-info">' +
-        '<div class="admin-user-name">' + (u.username || '(ユーザーネーム未設定)') + badgeHtml + '</div>' +
+        '<div class="admin-user-name">' + (u.username || '(ユーザーネーム未設定)') + badges + '</div>' +
         '<div class="admin-user-id">' + u.id + '</div>' +
-        '</div>' +
-        btnHtml +
-        '</div>';
+        '</div><div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">';
+
+      if (!isBanned) {
+        html += '<button class="admin-btn-ban admin-btn-ban-ban" data-uid="' + u.id + '" data-action="ban">BAN</button>';
+      } else {
+        html += '<button class="admin-btn-ban admin-btn-ban-unban" data-uid="' + u.id + '" data-action="unban">解除</button>';
+      }
+
+      if (isAdminUser) {
+        if (u.id !== currentUserId) {
+          html += '<button class="admin-btn-ban admin-btn-ban-ban" data-uid="' + u.id + '" data-action="demote">管理者解除</button>';
+        }
+      } else {
+        html += '<button class="admin-btn-ban admin-btn-ban-unban" data-uid="' + u.id + '" data-action="promote">管理者追加</button>';
+      }
+
+      html += '</div></div>';
     });
     if (!users.length) html = '<div class="list-empty">登録ユーザーはいません</div>';
     adminUserList.innerHTML = html;
+
     adminUserList.querySelectorAll('.admin-btn-ban').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var uid = btn.getAttribute('data-uid');
         var action = btn.getAttribute('data-action');
+
         if (action === 'ban') {
           if (bannedIds.indexOf(uid) === -1) bannedIds.push(uid);
-        } else {
+          saveAdminBans();
+          renderAdminUserList();
+          showToast('BANしました');
+        } else if (action === 'unban') {
           bannedIds = bannedIds.filter(function (id) { return id !== uid; });
+          saveAdminBans();
+          renderAdminUserList();
+          showToast('BANを解除しました');
+        } else if (action === 'promote') {
+          if (adminIds.indexOf(uid) === -1) adminIds.push(uid);
+          saveAdminList();
+          renderAdminUserList();
+          showToast('管理者に追加しました');
+        } else if (action === 'demote') {
+          adminIds = adminIds.filter(function (id) { return id !== uid; });
+          saveAdminList();
+          renderAdminUserList();
+          showToast('管理者を解除しました');
         }
-        saveAdminBans();
-        renderAdminUserList();
-        showToast(action === 'ban' ? 'BANしました' : 'BANを解除しました');
       });
     });
   });
 }
 
 function openAdminPanel() {
-  loadAdminBans().then(function () {
+  Promise.all([loadAdminList(), loadAdminBans()]).then(function () {
     renderAdminUserList();
     adminModal.classList.add('open');
   });
@@ -855,18 +900,20 @@ function openAdminPanel() {
 document.getElementById('adminClose').addEventListener('click', function () { adminModal.classList.remove('open'); });
 adminModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
 
-// 管理ボタンの表示制御（ログイン状態に応じて）
+// 管理ボタンの表示制御（動的管理者リストに基づく）
 function updateAdminBtn() {
-  adminBtn.style.display = (currentEmail === ADMIN_EMAIL) ? '' : 'none';
+  adminBtn.style.display = isAdmin() ? '' : 'none';
 }
 adminBtn.addEventListener('click', openAdminPanel);
-updateAdminBtn();
+
+// 管理者リストを読み込んでから管理ボタンを設定
+loadAdminList().then(function () { updateAdminBtn(); });
 
 // 既存の updateAuthUI に管理ボタン更新処理を追加
 var _origUpdateAuthUI = updateAuthUI;
 updateAuthUI = function (session) {
   _origUpdateAuthUI(session);
-  updateAdminBtn();
+  loadAdminList().then(function () { updateAdminBtn(); });
   if (session && currentUserId && isUserBanned(currentUserId)) {
     showToast('このアカウントはBANされています。一部機能が制限されます。');
   }
