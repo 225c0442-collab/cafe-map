@@ -766,3 +766,26 @@ body.dark-mode .inquiry-empty { color: var(--text-tertiary); }
 .app-edit-modal .form-group input:focus, .app-edit-modal .form-group select:focus { border-color: var(--accent); }
 .app-edit-modal .form-actions { display: flex; gap: 8px; margin-top: 16px; }
 .app-edit-modal .form-actions .btn { flex: 1; padding: 10px 0; font-size: 13px; }
+
+/* ===== 時間別天気予報 ===== */
+.forecast-grid {
+  display: flex; gap: 8px; overflow-x: auto; padding: 12px 4px;
+  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+}
+.forecast-grid::-webkit-scrollbar { height: 4px; }
+.forecast-grid::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+.forecast-hour {
+  flex-shrink: 0; text-align: center; padding: 12px 10px;
+  border-radius: 14px; background: var(--card-bg); border: 1px solid var(--border);
+  min-width: 68px; scroll-snap-align: start;
+  transition: all 0.2s;
+}
+.forecast-hour-now {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.forecast-hour-time {
+  font-size: 11px; font-weight: 600; margin-bottom: 4px; opacity: 0.7;
+}
+.forecast-hour-now .forecast-hour-time { opacity: 0.9; }
+.forecast-hour-icon { font-size: 22px; margin-bottom: 4px; line-height: 1; }
+.forecast-hour-temp { font-size: 14px; font-weight: 700; }

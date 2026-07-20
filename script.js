@@ -643,7 +643,8 @@ var CHANGELOG = [
   { date: '2026-07-15', time: '16:30', text: '<b>UIデザインを一新</b><ul><li>モダンなトースト通知を実装</li><li>グラスモフィズムとアースカラーの適用</li></ul>' },
   { date: '2026-07-15', time: '16:00', text: '<b>会員登録・ログイン機能を追加</b><ul><li>メールアドレス＋パスワードでの会員登録・ログイン</li><li>ログイン中のみカフェ登録・編集・削除・コメント・いいねが可能に</li><li>操作ログ機能（誰がいつ何をしたか記録）</li><li>ユーザーネーム設定（重複不可）</li><li>いいね機能の重複防止（likesテーブル）</li><li>コメント時の名前入力を廃止しログインユーザー名を自動使用</li></ul>' },
   { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li><li>RLSポリシー設定、GRANT権限付与</li></ul>' },
-  { date: '2026-07-20', time: '21:00', text: '<b>スマホ最適化・おすすめUI改善・各種リファクタ</b><ul><li>おすすめカフェをモーダルからボトムシートに変更（画面下部スライド）</li><li>ヘッダーオーバーフローメニュー追加（スマホでは一部ボタンを...に格納）</li><li>フォームパネルを PC ではセンターモーダル、スマホではボトムシートに</li><li>認証バーを PC では左下フローティング、スマホでは固定ヘッダーに</li><li>CSSを変数化しダークモード対応を強化</li><li>ポータルにラーメンマップ追加、tdl-weather を独立リポジトリ化</li></ul>' }
+  { date: '2026-07-20', time: '21:00', text: '<b>スマホ最適化・おすすめUI改善・各種リファクタ</b><ul><li>おすすめカフェをモーダルからボトムシートに変更（画面下部スライド）</li><li>ヘッダーオーバーフローメニュー追加（スマホでは一部ボタンを...に格納）</li><li>フォームパネルを PC ではセンターモーダル、スマホではボトムシートに</li><li>認証バーを PC では左下フローティング、スマホでは固定ヘッダーに</li><li>CSSを変数化しダークモード対応を強化</li><li>ポータルにラーメンマップ追加、tdl-weather を独立リポジトリ化</li></ul>' },
+  { date: '2026-07-20', time: '23:30', text: '<b>天気予報クリックで時間別予報を表示</b><ul><li>天気ウィジェットをタップすると1時間ごとの気温・天気アイコンをモーダル表示</li><li>Open-Meteo APIで当日24時間分の時間別データを取得</li><li>現在時刻の枠はアクセントカラーで強調表示</li></ul>' }
 ];
 
 function renderChangelog() {
@@ -828,17 +829,53 @@ setInterval(function () { renderList(); }, 60000);
   var el = document.getElementById('weatherWidget');
   if (!el) return;
   var ICONS = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',56:'🌦️',57:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌦️',82:'🌦️',85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️' };
+  var hourlyData = [];
   function fetchWeather() {
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=35.6580&longitude=139.7016&current_weather=true&timezone=Asia%2FTokyo')
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=35.6580&longitude=139.7016&current_weather=true&hourly=temperature_2m,weathercode&timezone=Asia%2FTokyo&forecast_days=1')
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.current_weather) return;
         var w = d.current_weather;
         var icon = ICONS[w.weathercode] || '🌤️';
         el.innerHTML = '<span class="icon">' + icon + '</span><span class="temp">' + Math.round(w.temperature) + '°C</span>';
+        if (d.hourly && d.hourly.time) {
+          hourlyData = d.hourly.time.map(function (t, i) {
+            return { time: t, temp: d.hourly.temperature_2m[i], code: d.hourly.weathercode[i] };
+          });
+        }
       })
       .catch(function () { /* ignore */ });
   }
+  function renderForecast() {
+    var now = new Date();
+    var currentHour = now.getHours();
+    var body = document.getElementById('weatherForecastBody');
+    if (!body || hourlyData.length === 0) return;
+    var html = '<div class="forecast-grid">';
+    hourlyData.forEach(function (h) {
+      var parts = h.time.split('T');
+      var hour = parseInt(parts[1].split(':')[0], 10);
+      var isNow = (hour === currentHour);
+      var icon = ICONS[h.code] || '🌤️';
+      var label = isNow ? 'Now' : hour.toString().padStart(2, '0') + ':00';
+      html += '<div class="forecast-hour' + (isNow ? ' forecast-hour-now' : '') + '">';
+      html += '<div class="forecast-hour-time">' + label + '</div>';
+      html += '<div class="forecast-hour-icon">' + icon + '</div>';
+      html += '<div class="forecast-hour-temp">' + Math.round(h.temp) + '°C</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    body.innerHTML = html;
+  }
+  el.style.cursor = 'pointer';
+  el.title = 'タップで時間別予報';
+  el.addEventListener('click', function () {
+    renderForecast();
+    document.getElementById('weatherModal').classList.add('open');
+  });
+  document.getElementById('weatherClose').addEventListener('click', function () {
+    document.getElementById('weatherModal').classList.remove('open');
+  });
   fetchWeather();
   setInterval(fetchWeather, 600000);
 })();

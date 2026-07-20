@@ -622,7 +622,8 @@ new L.Control.CurrentLocation({ position: 'topleft' }).addTo(map);
 var CHANGELOG = [
   { date: '2026-07-16', time: '公開', text: '<b>新宿ラーメンマップ 初回リリース</b><ul><li>渋谷カフェマップと同機能のラーメン店マップアプリ</li><li>地図クリックでラーメン店追加・編集・削除</li><li>認証・コメント・いいね機能</li><li>管理パネル・問い合わせ・写真アップロード</li><li>ダークモード対応</li></ul>' },
   { date: '2026-07-16', time: '更新', text: '<b>データ修正・店舗追加</b><ul><li>非実在店舗を削除（麺屋 太陽/麺処 楓/塩専門 銀波/つけ麺 匠家/油そば 昇龍/豚骨拉麺 魁/潮らーめん 渚）</li><li>喜多方ラーメン 蔵の住所を修正（新宿3-23-1 → 新宿3-36-18）</li><li>味噌ラーメン 北の蔵を「木桶仕込味噌らーめん 味噌蔵」に修正（住所・座標も訂正）</li><li>風雲児を追加（渋谷区代々木、鶏白湯魚介つけ麺）</li><li>タグ sho-yu → shoyu に統一</li></ul>' },
-  { date: '2026-07-20', time: '21:00', text: '<b>スマホ最適化・おすすめUI改善</b><ul><li>おすすめラーメンをボトムシート化（画面下部スライド）</li><li>ヘッダーオーバーフローメニュー追加</li><li>フォームパネル・認証バーのモバイル対応改善</li><li>CSS変数化・ダークモード強化</li></ul>' }
+  { date: '2026-07-20', time: '21:00', text: '<b>スマホ最適化・おすすめUI改善</b><ul><li>おすすめラーメンをボトムシート化（画面下部スライド）</li><li>ヘッダーオーバーフローメニュー追加</li><li>フォームパネル・認証バーのモバイル対応改善</li><li>CSS変数化・ダークモード強化</li></ul>' },
+  { date: '2026-07-20', time: '23:30', text: '<b>天気予報クリックで時間別予報を表示</b><ul><li>天気ウィジェットをタップすると1時間ごとの気温・天気アイコンをモーダル表示</li><li>Open-Meteo APIで当日24時間分の時間別データを取得</li><li>現在時刻の枠はアクセントカラーで強調表示</li></ul>' }
 ];
 
 function renderChangelog() {
@@ -815,17 +816,53 @@ setInterval(function () { renderList(); }, 60000);
   var el = document.getElementById('weatherWidget');
   if (!el) return;
   var ICONS = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',56:'🌦️',57:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌦️',82:'🌦️',85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️' };
+  var hourlyData = [];
   function fetchWeather() {
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=35.6895&longitude=139.6917&current_weather=true&timezone=Asia%2FTokyo')
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=35.6895&longitude=139.6917&current_weather=true&hourly=temperature_2m,weathercode&timezone=Asia%2FTokyo&forecast_days=1')
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.current_weather) return;
         var w = d.current_weather;
         var icon = ICONS[w.weathercode] || '🌤️';
         el.innerHTML = '<span class="icon">' + icon + '</span><span class="temp">' + Math.round(w.temperature) + '°C</span>';
+        if (d.hourly && d.hourly.time) {
+          hourlyData = d.hourly.time.map(function (t, i) {
+            return { time: t, temp: d.hourly.temperature_2m[i], code: d.hourly.weathercode[i] };
+          });
+        }
       })
       .catch(function () { /* ignore */ });
   }
+  function renderForecast() {
+    var now = new Date();
+    var currentHour = now.getHours();
+    var body = document.getElementById('weatherForecastBody');
+    if (!body || hourlyData.length === 0) return;
+    var html = '<div class="forecast-grid">';
+    hourlyData.forEach(function (h) {
+      var parts = h.time.split('T');
+      var hour = parseInt(parts[1].split(':')[0], 10);
+      var isNow = (hour === currentHour);
+      var icon = ICONS[h.code] || '🌤️';
+      var label = isNow ? 'Now' : hour.toString().padStart(2, '0') + ':00';
+      html += '<div class="forecast-hour' + (isNow ? ' forecast-hour-now' : '') + '">';
+      html += '<div class="forecast-hour-time">' + label + '</div>';
+      html += '<div class="forecast-hour-icon">' + icon + '</div>';
+      html += '<div class="forecast-hour-temp">' + Math.round(h.temp) + '°C</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    body.innerHTML = html;
+  }
+  el.style.cursor = 'pointer';
+  el.title = 'タップで時間別予報';
+  el.addEventListener('click', function () {
+    renderForecast();
+    document.getElementById('weatherModal').classList.add('open');
+  });
+  document.getElementById('weatherClose').addEventListener('click', function () {
+    document.getElementById('weatherModal').classList.remove('open');
+  });
   fetchWeather();
   setInterval(fetchWeather, 600000);
 })();
