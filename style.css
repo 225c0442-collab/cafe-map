@@ -4,7 +4,7 @@
   --bg-raised: #fff;
   --bg-glass: rgba(255,255,255,0.85);
   --bg-glass-2: rgba(255,255,255,0.96);
-  --bg-glass-3: rgba(252,251,249,0.9);
+  --bg-glass-3: rgba(255,255,255,0.92);
   --text-primary: #2b1c15;
   --text-secondary: #4a3c31;
   --text-tertiary: #8c7e73;
@@ -107,7 +107,7 @@ html, body {
 }
 .header h1 { font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; letter-spacing: -0.02em; }
 .header h1 span { color: var(--accent); }
-.header-actions { margin-left: auto; display: flex; gap: 8px; }
+.header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 .header-btn {
   background: var(--bg-raised); border: 1px solid var(--border-strong); 
   border-radius: 20px; padding: 8px 14px; font-size: 12px; font-weight: 600;
@@ -134,7 +134,7 @@ html, body {
   border-radius: 50%; background: #b5825a; margin-right: 6px;
 }
 
-/* ===== 認証バー (PCでは左下のフローティングウィジェットに) ===== */
+/* ===== 認証バー (PC/デフォルトは左下のカード) ===== */
 .auth-bar {
   position: fixed; top: auto; bottom: 24px; left: 24px; right: auto; z-index: 998;
   background: var(--bg-glass-3); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -297,7 +297,7 @@ html, body {
 .form-toggle:hover { transform: scale(1.08) translateY(-2px); box-shadow: 0 12px 30px rgba(181, 130, 90, 0.5); }
 .form-toggle.open { transform: rotate(135deg); background: #7a5a3a; box-shadow: 0 8px 20px rgba(122, 90, 58, 0.3); }
 
-/* PC用モーダルスタイル */
+/* PC用フォームモーダルスタイル */
 .form-panel {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
   width: 90%; max-width: 540px; z-index: 1001;
@@ -386,23 +386,102 @@ body:not(.logged-in) .form-toggle { display: none !important; }
 }
 .header-dropdown-item:hover { background: var(--card-hover); color: var(--text-primary); }
 
-/* ===== レスポンシブ (スマホ向けボトムシート対応など) ===== */
+
+/* ==========================================
+   📱 完璧なレスポンシブ (iPhone 12 最適化)
+   ========================================== */
 @media (max-width: 700px) {
-  .header { padding: 10px 14px; }
-  .header h1 { font-size: 14px; }
-  .header-btn { font-size: 10px; padding: 6px 10px; }
-  #appsBtn, #changelogBtn, #actionLogBtn, #exportBtn, #importBtn { display: none !important; }
+  /* ヘッダー全体をギュッとコンパクト化 */
+  .header { padding: 10px 12px; gap: 6px; height: 48px; }
+  .header h1 { font-size: 13px; letter-spacing: -0.03em; }
+  .counter-badge { padding: 1px 6px; font-size: 10px; margin-left: 2px; }
+  .header-actions { gap: 4px; }
+  .header-btn { font-size: 11px; padding: 6px 8px; border-radius: 14px; }
+  
+  /* 天気ウィジェットも幅を取らないように微調整 */
+  .weather-widget { font-size: 11px; padding: 6px 8px; border-radius: 14px; gap: 2px; }
+  .weather-widget .icon { font-size: 13px; }
+
+  /* ❌ iPhone12で見切れる原因だったボタン群を「すべて」完全に非表示化 ❌
+     これによりJavaScriptの自動格納処理が正確に走り、••• の中へ綺麗に入ります。 */
+  #appsBtn, #changelogBtn, #actionLogBtn, #exportBtn, #importBtn, 
+  #recommendBtn, #inquiryBtn, #likesBtn, #adminBtn { 
+    display: none !important; 
+  }
+  
   .header-more { display: inline-flex; }
-  .auth-bar { top: 53px; bottom: auto; left: 0; right: 0; border-radius: 0; border-left: none; border-right: none; padding: 8px 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); }
-  .list-panel { width: 100%; padding-top: 100px; }
-  .form-panel { top: auto; bottom: 0; left: 0; transform: translateY(100%); width: 100%; max-width: 100%; border-radius: 20px 20px 0 0; padding: 18px 18px 24px; border-bottom: none; opacity: 1; }
+  .header-dropdown { top: 52px; right: 10px; z-index: 2100; }
+
+  /* ⚠️ 画面上部を最悪なほど圧迫していた認証バーを「画面下部の浮遊カード」へ大改造 ⚠️ */
+  .auth-bar { 
+    top: auto; 
+    bottom: 92px; /* フォーム起動ボタンと被らない絶妙な配置 */
+    left: 12px; 
+    right: 12px; 
+    border-radius: 14px; 
+    padding: 12px; 
+    box-shadow: 0 8px 30px var(--shadow-strong);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    max-width: calc(100% - 24px);
+  }
+  #authNotLoggedIn {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+  }
+  .auth-input {
+    width: 100% !important;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .auth-btn {
+    height: 36px;
+    width: 100%;
+    border-radius: 10px;
+  }
+  .auth-link {
+    text-align: center;
+    margin-top: 2px;
+    font-size: 10px;
+  }
+  /* ログイン後は邪魔にならないよう極限まで綺麗に縦並び化 */
+  .auth-user {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+  }
+  .auth-user .auth-btn-out {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  /* 認証エリアが下部に避けたので、地図の操作領域を上部ギリギリまで広げる */
+  .list-panel { width: 100%; padding-top: 48px; }
+  .leaflet-top { top: 56px !important; }
+  
+  /* スマホのフォームパネルはPCと違い、下から競り上がるスマートシート構造を維持 */
+  .form-panel { 
+    top: auto; 
+    bottom: 0; 
+    left: 0; 
+    transform: translateY(100%); 
+    width: 100%; 
+    max-width: 100%; 
+    border-radius: 20px 20px 0 0; 
+    padding: 18px 18px 24px; 
+    border-bottom: none; 
+    opacity: 1;
+    z-index: 1005;
+  }
   .form-panel.open { transform: translateY(0); }
-  .form-toggle { bottom: 18px; right: 18px; width: 50px; height: 50px; font-size: 26px; }
-  .leaflet-top { top: 148px !important; }
-  .header-dropdown { top: 52px; right: 10px; }
+  .form-toggle { bottom: 20px; right: 20px; width: 50px; height: 50px; font-size: 26px; z-index: 1006; }
 }
 
-/* ===== 関連アプリモーダル用のスタイル ===== */
+/* ===== 関連アプリカード用のスタイル ===== */
 .app-link-card {
   display: flex; align-items: center; justify-content: space-between; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); background: var(--card-bg);
 }
@@ -477,6 +556,68 @@ body:not(.logged-in) .form-toggle { display: none !important; }
 .admin-inquiry-reply-text { font-size: 12px; color: var(--text-secondary); margin: 2px 0; }
 .admin-inquiry-reply-time { font-size: 10px; color: var(--text-tertiary); }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 10px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; vertical-align: middle; }
+
+/* ===== ダークモード追加オーバーライド ===== */
+body.dark-mode .modal-content { background: var(--modal-bg); border-color: var(--border); }
+body.dark-mode .modal-header { border-bottom-color: var(--border); }
+body.dark-mode .modal-header h2 { color: var(--text-primary); }
+body.dark-mode .modal-close { background: var(--bg-raised); color: var(--text-secondary); border-color: var(--border); }
+body.dark-mode .modal-close:hover { background: var(--card-hover); }
+body.dark-mode .list-panel { background: var(--bg-glass-2); border-right-color: var(--border); }
+body.dark-mode .list-item { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .list-item:hover { background: var(--card-hover); }
+body.dark-mode .list-item-name { color: var(--text-primary); }
+body.dark-mode .list-item-addr { color: var(--text-tertiary); }
+body.dark-mode .list-search input { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .tag-filter-chip { background: var(--card-bg); color: var(--text-secondary); border-color: var(--border-strong); }
+body.dark-mode .form-panel { background: var(--bg-glass-2); border-color: var(--border); }
+body.dark-mode .form-panel h2 { color: var(--text-primary); }
+body.dark-mode .form-group label { color: var(--text-secondary); }
+body.dark-mode .form-group input, body.dark-mode .form-group textarea { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .form-radio-opt, body.dark-mode .form-tag-opt { background: var(--card-bg); color: var(--text-secondary); border-color: var(--border-strong); }
+body.dark-mode .form-radio-opt:hover, body.dark-mode .form-tag-opt:hover { background: var(--card-hover); }
+body.dark-mode .counter-badge { background: rgba(255,255,255,0.1); color: var(--text-tertiary); }
+body.dark-mode .leaflet-popup-content-wrapper { background: var(--modal-bg); border-color: var(--border); }
+body.dark-mode .popup-name { color: var(--text-primary); }
+body.dark-mode .popup-addr { color: var(--text-tertiary); }
+body.dark-mode .popup-desc { background: var(--card-bg); color: var(--text-secondary); border-left-color: var(--accent); }
+body.dark-mode .popup-detail { background: var(--card-bg); }
+body.dark-mode .popup-detail-row { color: var(--text-secondary); }
+body.dark-mode .popup-comment { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .popup-comment-text { color: var(--text-secondary); }
+body.dark-mode .popup-comments-title { color: var(--text-secondary); }
+body.dark-mode .popup-comments { border-top-color: var(--border); }
+body.dark-mode .popup-comment-form input { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .admin-user-row { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .admin-user-row:hover { background: var(--card-hover); }
+body.dark-mode .admin-user-name { color: var(--text-primary); }
+body.dark-mode .admin-inquiry-card { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .admin-inquiry-text { color: var(--text-secondary); }
+body.dark-mode .inquiry-item { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .inquiry-item-text { color: var(--text-secondary); }
+body.dark-mode .inquiry-reply { background: var(--bg-raised); }
+body.dark-mode .inquiry-reply p { color: var(--text-secondary); }
+body.dark-mode .admin-inquiry-reply-item { background: var(--bg-raised); }
+body.dark-mode .admin-inquiry-reply-text { color: var(--text-secondary); }
+body.dark-mode .list-toggle, body.dark-mode .locate-btn { background: var(--card-bg); color: var(--text-secondary); border-color: var(--border); }
+body.dark-mode .admin-tabs { background: var(--card-bg); }
+body.dark-mode .admin-tab.active { background: var(--bg-raised); color: var(--text-primary); }
+body.dark-mode .app-link-card { background: var(--card-bg); border-color: var(--border); }
+body.dark-mode .app-link-card:hover { background: var(--bg-raised); }
+body.dark-mode .app-link-title { color: var(--text-primary); }
+body.dark-mode .app-link-desc { color: var(--text-tertiary); }
+body.dark-mode .changelog-text { color: var(--text-secondary); }
+body.dark-mode .action-log-item { border-bottom-color: var(--border); }
+body.dark-mode .admin-inquiry-reply-box textarea { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .admin-section-title { color: var(--text-primary); border-bottom-color: var(--border); }
+body.dark-mode .settings-section h3 { color: var(--text-primary); }
+body.dark-mode .settings-desc { color: var(--text-tertiary); }
+body.dark-mode .inquiry-input { background: var(--input-bg); color: var(--text-primary); border-color: var(--border-strong); }
+body.dark-mode .inquiry-history-title { color: var(--text-secondary); }
+body.dark-mode .inquiry-empty { color: var(--text-tertiary); }
+
+/* ===== ダークモードトグルボタン ===== */
+.dark-toggle { font-size: 16px; line-height: 1; padding: 6px 10px !important; }
 
 /* ===== 営業中インジケーター ===== */
 .open-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; }
