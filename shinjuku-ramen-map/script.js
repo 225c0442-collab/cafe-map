@@ -624,7 +624,8 @@ var CHANGELOG = [
   { date: '2026-07-16', time: '更新', text: '<b>データ修正・店舗追加</b><ul><li>非実在店舗を削除（麺屋 太陽/麺処 楓/塩専門 銀波/つけ麺 匠家/油そば 昇龍/豚骨拉麺 魁/潮らーめん 渚）</li><li>喜多方ラーメン 蔵の住所を修正（新宿3-23-1 → 新宿3-36-18）</li><li>味噌ラーメン 北の蔵を「木桶仕込味噌らーめん 味噌蔵」に修正（住所・座標も訂正）</li><li>風雲児を追加（渋谷区代々木、鶏白湯魚介つけ麺）</li><li>タグ sho-yu → shoyu に統一</li></ul>' },
   { date: '2026-07-20', time: '21:00', text: '<b>スマホ最適化・おすすめUI改善</b><ul><li>おすすめラーメンをボトムシート化（画面下部スライド）</li><li>ヘッダーオーバーフローメニュー追加</li><li>フォームパネル・認証バーのモバイル対応改善</li><li>CSS変数化・ダークモード強化</li></ul>' },
   { date: '2026-07-20', time: '23:30', text: '<b>天気予報クリックで時間別予報を表示</b><ul><li>天気ウィジェットをタップすると1時間ごとの気温・天気アイコンをモーダル表示</li><li>Open-Meteo APIで当日24時間分の時間別データを取得</li><li>現在時刻の枠はアクセントカラーで強調表示</li></ul>' },
-  { date: '2026-07-21', time: '01:00', text: '<b>関連アプリモーダル改善</b><ul><li>関連アプリに「ポータルサイトに戻る」を先頭表示</li><li>現在開いているアプリを一覧から自動除外（pathname比較）</li></ul>' }
+  { date: '2026-07-21', time: '01:00', text: '<b>関連アプリモーダル改善</b><ul><li>関連アプリに「ポータルサイトに戻る」を先頭表示</li><li>現在開いているアプリを一覧から自動除外（pathname比較）</li></ul>' },
+  { date: '2026-07-21', time: '02:00', text: '<b>利用規約を追加</b><ul><li>ヘッダーに「利用規約」ボタンを追加</li><li>モーダルで全5条の利用規約を表示（適用・登録・禁止事項・免責・変更）</li><li>スマホでは...メニューに格納</li></ul>' }
 ];
 
 function renderChangelog() {
@@ -640,6 +641,12 @@ var changelogClose = document.getElementById('changelogClose');
 if (changelogClose) changelogClose.addEventListener('click', function () { var m = document.getElementById('changelogModal'); if (m) m.classList.remove('open'); });
 var changelogModal = document.getElementById('changelogModal');
 if (changelogModal) changelogModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+var termsBtn = document.getElementById('termsBtn');
+if (termsBtn) termsBtn.addEventListener('click', function () { var m = document.getElementById('termsModal'); if (m) m.classList.add('open'); });
+var termsClose = document.getElementById('termsClose');
+if (termsClose) termsClose.addEventListener('click', function () { var m = document.getElementById('termsModal'); if (m) m.classList.remove('open'); });
+var termsModal = document.getElementById('termsModal');
+if (termsModal) termsModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
 
 var currentUserId = null; var currentUsername = null; var currentEmail = null; var isRegisterMode = false;
 var authNotLoggedIn = document.getElementById('authNotLoggedIn'); var authLoggedIn = document.getElementById('authLoggedIn');

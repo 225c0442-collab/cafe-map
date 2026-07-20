@@ -645,7 +645,8 @@ var CHANGELOG = [
   { date: '2026-07-14', time: '18:30', text: '<b>Supabase 対応</b><ul><li>データ保存先を localStorage から Supabase に移行</li><li>RLSポリシー設定、GRANT権限付与</li></ul>' },
   { date: '2026-07-20', time: '21:00', text: '<b>スマホ最適化・おすすめUI改善・各種リファクタ</b><ul><li>おすすめカフェをモーダルからボトムシートに変更（画面下部スライド）</li><li>ヘッダーオーバーフローメニュー追加（スマホでは一部ボタンを...に格納）</li><li>フォームパネルを PC ではセンターモーダル、スマホではボトムシートに</li><li>認証バーを PC では左下フローティング、スマホでは固定ヘッダーに</li><li>CSSを変数化しダークモード対応を強化</li><li>ポータルにラーメンマップ追加、tdl-weather を独立リポジトリ化</li></ul>' },
   { date: '2026-07-20', time: '23:30', text: '<b>天気予報クリックで時間別予報を表示</b><ul><li>天気ウィジェットをタップすると1時間ごとの気温・天気アイコンをモーダル表示</li><li>Open-Meteo APIで当日24時間分の時間別データを取得</li><li>現在時刻の枠はアクセントカラーで強調表示</li></ul>' },
-  { date: '2026-07-21', time: '01:00', text: '<b>関連アプリモーダル改善＋tdl-weather関連アプリ追加</b><ul><li>関連アプリに「ポータルサイトに戻る」を先頭表示</li><li>現在開いているアプリを一覧から自動除外（pathname比較）</li><li>tdl-weatherに関連アプリモーダルを新設（ポータル戻る＋全アプリリンク）</li><li>tdl-weatherをcafe-mapリポジトリから独立（.gitignore管理）</li></ul>' }
+  { date: '2026-07-21', time: '01:00', text: '<b>関連アプリモーダル改善＋tdl-weather関連アプリ追加</b><ul><li>関連アプリに「ポータルサイトに戻る」を先頭表示</li><li>現在開いているアプリを一覧から自動除外（pathname比較）</li><li>tdl-weatherに関連アプリモーダルを新設（ポータル戻る＋全アプリリンク）</li><li>tdl-weatherをcafe-mapリポジトリから独立（.gitignore管理）</li></ul>' },
+  { date: '2026-07-21', time: '02:00', text: '<b>利用規約を追加</b><ul><li>ヘッダーに「利用規約」ボタンを追加</li><li>モーダルで全5条の利用規約を表示（適用・登録・禁止事項・免責・変更）</li><li>スマホでは...メニューに格納</li></ul>' }
 ];
 
 function renderChangelog() {
@@ -657,6 +658,9 @@ function renderChangelog() {
 document.getElementById('changelogBtn').addEventListener('click', function () { renderChangelog(); document.getElementById('changelogModal').classList.add('open'); });
 document.getElementById('changelogClose').addEventListener('click', function () { document.getElementById('changelogModal').classList.remove('open'); });
 document.getElementById('changelogModal').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+document.getElementById('termsBtn').addEventListener('click', function () { document.getElementById('termsModal').classList.add('open'); });
+document.getElementById('termsClose').addEventListener('click', function () { document.getElementById('termsModal').classList.remove('open'); });
+document.getElementById('termsModal').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
 
 var currentUserId = null; var currentUsername = null; var currentEmail = null; var isRegisterMode = false;
 var authNotLoggedIn = document.getElementById('authNotLoggedIn'); var authLoggedIn = document.getElementById('authLoggedIn');

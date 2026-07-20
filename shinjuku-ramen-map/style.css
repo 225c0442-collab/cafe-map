@@ -435,7 +435,7 @@ body:not(.logged-in) .form-toggle { display: none !important; }
   .weather-widget .icon { font-size: 13px; }
 
   /* 4. メニューの中に入れるべきボタンを「強制的に」非表示にする */
-  #appsBtn, #changelogBtn, #actionLogBtn, #exportBtn, #importBtn, 
+  #appsBtn, #changelogBtn, #termsBtn, #actionLogBtn, #exportBtn, #importBtn, 
   #recommendBtn, #inquiryBtn, #likesBtn, #adminBtn { 
     display: none !important; 
   }
