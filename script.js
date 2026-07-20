@@ -1460,10 +1460,12 @@ function renderAppsModal() {
       '<div class="app-link-desc">Web Applications Portfolio を開く</div>' +
     '</div><div class="app-link-arrow">←</div></div>';
   if (!appLinks.length) { body.innerHTML = html; return; }
-  var currentHref = location.href.replace(/\/$/, '');
+  var currentPath = location.pathname.replace(/\/$/, '');
   html += appLinks.map(function (a, i) {
-    var appUrl = (a.url || '').replace(/\/$/, '');
-    if (currentHref.indexOf(appUrl) !== -1 || appUrl.indexOf(currentHref) !== -1) return '';
+    try {
+      var appPath = new URL(a.url).pathname.replace(/\/$/, '');
+      if (currentPath.indexOf(appPath) !== -1 || appPath.indexOf(currentPath) !== -1) return '';
+    } catch(e) {}
     return '<div class="app-link-card" data-index="' + i + '">' +
       '<div class="app-link-info">' +
         '<div class="app-link-title">' + escHtml(a.title) + '</div>' +
