@@ -27,6 +27,8 @@
     <button class="header-btn" id="exportBtn">出力</button>
     <button class="header-btn" id="importBtn">読込</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
+    <button class="header-btn header-more" id="headerMoreBtn">•••</button>
+    <div class="header-dropdown" id="headerDropdown"></div>
   </div>
 </div>
 
@@ -61,7 +63,7 @@
 <div class="list-panel" id="listPanel">
   <div style="display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid rgba(74, 55, 40, 0.06)">
     <span style="font-size:15px;font-weight:700;color:#2b1c15;flex:1">カフェを探す</span>
-    <button id="listCloseBtn" style="width:28px;height:28px;border:none;border-radius:50%;background:#efe8e1;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#5c4e43;">×</button>
+    <button id="listCloseBtn" style="width:28px;height:28px;border:none;border-radius:50%;background:var(--bg-raised);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">×</button>
   </div>
   <div class="list-search">
     <input type="text" id="searchBox" placeholder="カフェ名・住所で検索">
@@ -73,8 +75,14 @@
 <div class="map-click-hint" id="hint">地図をクリックして位置を指定</div>
 <button class="form-toggle" id="formToggle">+</button>
 
+<!-- フォームの背景を暗くするオーバーレイ -->
+<div class="form-overlay" id="formOverlay"></div>
+
 <div class="form-panel" id="formPanel">
-  <h2 id="formTitle">新しいカフェを登録</h2>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h2 id="formTitle" style="margin:0;">新しいカフェを登録</h2>
+    <button class="modal-close" id="formCloseIcon">×</button>
+  </div>
   <div class="form-group">
     <label for="cafeName">カフェ名</label>
     <input type="text" id="cafeName" placeholder="例：カフェ・ド・クリエ 渋谷店">
@@ -192,14 +200,17 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="recommendModal">
-  <div class="modal-content">
-    <div class="modal-header">
+<div class="sheet-overlay" id="recommendOverlay">
+  <div class="sheet" id="recommendSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
       <h2>おすすめカフェ</h2>
-      <button class="modal-close" id="recommendClose">×</button>
+      <button class="sheet-close" id="recommendClose">×</button>
     </div>
-    <div class="modal-body" id="recommendBody">
-      <div id="recommendContent"></div>
+    <div class="sheet-body" id="recommendContent"></div>
+    <div class="sheet-footer">
+      <button class="btn btn-primary" id="recommendRetryBtn">もう一度引く</button>
+      <button class="btn btn-cancel" id="recommendMapBtn">地図で見る</button>
     </div>
   </div>
 </div>

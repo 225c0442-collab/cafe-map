@@ -1416,14 +1416,16 @@ likesBtn.addEventListener('click', function () { likesModal.classList.add('open'
 document.getElementById('likesClose').addEventListener('click', function () { likesModal.classList.remove('open'); });
 likesModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
 
-// ===== おすすめカフェ =====
-var recommendModal = document.getElementById('recommendModal');
+// ===== おすすめラーメン =====
+var recommendOverlay = document.getElementById('recommendOverlay');
 var recommendContent = document.getElementById('recommendContent');
+var _lastRecommendPick = null;
 
 function showRecommend() {
-  var available = cafes.filter(function (c) { return c.id > 0 && c.id !== 53 && c.id !== 54 && c.id !== 55 && c.id !== 56 && c.id !== 57; });
+  var available = cafes.filter(function (c) { return c.id > 0; });
   if (!available.length) { recommendContent.innerHTML = '<div class="recommend-empty">ラーメン店が登録されていません</div>'; return; }
-  var pick = available[Math.floor(Math.random() * available.length)];
+  _lastRecommendPick = available[Math.floor(Math.random() * available.length)];
+  var pick = _lastRecommendPick;
   var tagsHtml = '';
   if (pick.tags && pick.tags.length) { tagsHtml = '<div class="recommend-tags">' + pick.tags.map(function (t) { return '<span class="tag tag-' + t + '">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + '</div>'; }
   var st = openStatus(pick);
@@ -1436,16 +1438,50 @@ function showRecommend() {
       tagsHtml +
       '<div class="recommend-desc">' + escHtml(pick.desc) + '</div>' +
     '</div>';
-  document.getElementById('recommendRetryBtn').onclick = showRecommend;
-  document.getElementById('recommendMapBtn').onclick = function () {
-    focusCafeOnMap(pick.id);
-    recommendModal.classList.remove('open');
-  };
 }
 
-document.getElementById('recommendBtn').addEventListener('click', function () { recommendModal.classList.add('open'); showRecommend(); });
-document.getElementById('recommendClose').addEventListener('click', function () { recommendModal.classList.remove('open'); });
-recommendModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+document.getElementById('recommendBtn').addEventListener('click', function () { recommendOverlay.classList.add('open'); showRecommend(); });
+document.getElementById('recommendClose').addEventListener('click', function () { recommendOverlay.classList.remove('open'); });
+document.getElementById('recommendRetryBtn').addEventListener('click', showRecommend);
+document.getElementById('recommendMapBtn').addEventListener('click', function () {
+  if (_lastRecommendPick) {
+    focusCafeOnMap(_lastRecommendPick.id);
+    recommendOverlay.classList.remove('open');
+  }
+});
+recommendOverlay.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+
+// ===== ヘッダーオーバーフローメニュー =====
+var headerMoreBtn = document.getElementById('headerMoreBtn');
+var headerDropdown = document.getElementById('headerDropdown');
+if (headerMoreBtn) {
+  headerMoreBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var items = [];
+    var btns = document.querySelectorAll('.header-actions .header-btn');
+    btns.forEach(function (btn) {
+      if (btn === headerMoreBtn) return;
+      if (btn.style.display === 'none') return;
+      if (btn.offsetParent === null) items.push(btn);
+    });
+    if (!items.length) { headerDropdown.classList.remove('open'); return; }
+    var html = '';
+    items.forEach(function (btn) {
+      html += '<button class="header-dropdown-item" data-id="' + btn.id + '">' + btn.textContent + '</button>';
+    });
+    headerDropdown.innerHTML = html;
+    headerDropdown.querySelectorAll('.header-dropdown-item').forEach(function (item) {
+      item.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        var orig = document.getElementById(this.getAttribute('data-id'));
+        if (orig) orig.click();
+        headerDropdown.classList.remove('open');
+      });
+    });
+    headerDropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', function () { headerDropdown.classList.remove('open'); });
+}
 
 // ===== updateAuthUI に likesBtn 表示制御を追加 =====
 var _origUpdateAuthUI2 = updateAuthUI;

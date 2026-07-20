@@ -288,6 +288,53 @@ body:not(.logged-in) .form-toggle { display: none !important; }
 .recommend-tags { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
 .recommend-actions { display: flex; gap: 10px; padding: 0 24px 20px; }
 .recommend-empty { text-align: center; color: var(--text-tertiary); padding: 40px 0; font-size: 13px; }
+
+/* ===== おすすめボトムシート ===== */
+.sheet-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 2000; background: rgba(43, 28, 21, 0.4);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.sheet-overlay.open { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 2001; background: var(--modal-bg);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -10px 40px rgba(74,55,40,0.15);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 80vh; display: flex; flex-direction: column;
+  border: 1px solid var(--border); border-bottom: none;
+}
+.sheet-overlay.open .sheet { transform: translateY(0); }
+.sheet-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--text-tertiary); opacity: 0.3;
+  margin: 10px auto 0; flex-shrink: 0;
+}
+.sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px; flex-shrink: 0;
+}
+.sheet-header h2 { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.sheet-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--card-hover); color: var(--text-secondary);
+  font-size: 18px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.sheet-close:hover { background: var(--border-strong); }
+.sheet-body {
+  padding: 0 20px; overflow-y: auto; flex: 1;
+}
+.sheet-footer {
+  display: flex; gap: 10px; padding: 16px 20px 24px; flex-shrink: 0;
+}
+.sheet-footer .btn { flex: 1; padding: 12px 0; font-size: 14px; border-radius: 12px; }
+
 .likes-list { max-height: 400px; overflow-y: auto; }
 .likes-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
 .likes-item:hover { background: var(--card-hover); border-color: var(--accent); }
@@ -316,13 +363,35 @@ body:not(.logged-in) .form-toggle { display: none !important; }
 .app-edit-modal .form-group input:focus, .app-edit-modal .form-group select:focus { border-color: var(--accent); }
 .app-edit-modal .form-actions { display: flex; gap: 8px; margin-top: 16px; }
 .app-edit-modal .form-actions .btn { flex: 1; padding: 10px 0; font-size: 13px; }
+/* ===== ヘッダーオーバーフローメニュー ===== */
+.header-more { display: none; letter-spacing: 2px; padding: 8px 10px; }
+.header-dropdown {
+  display: none; position: fixed; top: 56px; right: 12px; z-index: 2100;
+  background: var(--modal-bg); border-radius: 14px;
+  box-shadow: 0 12px 40px var(--shadow-strong);
+  border: 1px solid var(--border); padding: 6px; min-width: 170px;
+  overflow: hidden;
+}
+.header-dropdown.open { display: block; }
+.header-dropdown-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 11px 16px; border: none; background: none;
+  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  cursor: pointer; border-radius: 8px; text-align: left;
+  transition: background 0.15s; font-family: inherit;
+}
+.header-dropdown-item:hover { background: var(--card-hover); color: var(--text-primary); }
+
 @media (max-width: 700px) {
   .header { padding: 10px 14px; }
-  .header h1 { font-size: 15px; }
+  .header h1 { font-size: 14px; }
   .header-btn { font-size: 10px; padding: 6px 10px; }
-  .auth-bar { top: 55px; padding: 8px 14px; }
-  .list-panel { width: 100%; padding-top: 105px; }
+  #appsBtn, #changelogBtn, #actionLogBtn, #exportBtn, #importBtn { display: none !important; }
+  .header-more { display: inline-flex; }
+  .auth-bar { top: 53px; padding: 6px 12px; }
+  .list-panel { width: 100%; padding-top: 100px; }
   .form-panel { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; padding: 18px 18px 24px; }
   .form-toggle { bottom: 18px; right: 18px; width: 50px; height: 50px; font-size: 26px; }
-  .leaflet-top { top: 155px !important; }
+  .leaflet-top { top: 148px !important; }
+  .header-dropdown { top: 52px; right: 10px; }
 }

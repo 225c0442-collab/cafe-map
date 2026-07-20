@@ -27,6 +27,8 @@
     <button class="header-btn" id="exportBtn">出力</button>
     <button class="header-btn" id="importBtn">読込</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
+    <button class="header-btn header-more" id="headerMoreBtn">•••</button>
+    <div class="header-dropdown" id="headerDropdown"></div>
   </div>
 </div>
 
@@ -178,18 +180,17 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="recommendModal">
-  <div class="modal-content">
-    <div class="modal-header">
+<div class="sheet-overlay" id="recommendOverlay">
+  <div class="sheet" id="recommendSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
       <h2>おすすめラーメン</h2>
-      <button class="modal-close" id="recommendClose">×</button>
+      <button class="sheet-close" id="recommendClose">×</button>
     </div>
-    <div class="modal-body" id="recommendBody">
-      <div id="recommendContent"></div>
-    </div>
-    <div style="display:flex;gap:10px;padding:0 24px 20px">
-      <button class="btn btn-primary" id="recommendRetryBtn" style="flex:1">もう一度引く</button>
-      <button class="btn btn-cancel" id="recommendMapBtn" style="flex:1">地図で見る</button>
+    <div class="sheet-body" id="recommendContent"></div>
+    <div class="sheet-footer">
+      <button class="btn btn-primary" id="recommendRetryBtn">もう一度引く</button>
+      <button class="btn btn-cancel" id="recommendMapBtn">地図で見る</button>
     </div>
   </div>
 </div>
