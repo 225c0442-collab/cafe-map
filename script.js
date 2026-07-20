@@ -895,7 +895,13 @@ document.getElementById('appsModal').addEventListener('click', function (e) {
 document.getElementById('appsBody').addEventListener('click', function (e) {
   var card = e.target.closest('.app-link-card');
   if (!card) return;
-  var idx = Array.from(this.children).indexOf(card);
+  var action = card.getAttribute('data-action');
+  if (action === 'portal') {
+    location.href = 'https://class.tama.net/~p225C0442/';
+    return;
+  }
+  var idx = parseInt(card.getAttribute('data-index'), 10);
+  if (isNaN(idx)) return;
   var app = appLinks[idx];
   if (!app) return;
   if (app.target === 'self') { location.href = app.url; }
@@ -1448,14 +1454,23 @@ function saveApps() {
 
 function renderAppsModal() {
   var body = document.getElementById('appsBody');
-  if (!appLinks.length) { body.innerHTML = '<div style="text-align:center;color:#8c7e73;padding:30px 0;font-size:13px;">関連アプリはありません</div>'; return; }
-  body.innerHTML = appLinks.map(function (a) {
-    return '<div class="app-link-card">' +
+  var html = '<div class="app-link-card" data-action="portal">' +
+    '<div class="app-link-info">' +
+      '<div class="app-link-title">ポータルサイトに戻る</div>' +
+      '<div class="app-link-desc">Web Applications Portfolio を開く</div>' +
+    '</div><div class="app-link-arrow">←</div></div>';
+  if (!appLinks.length) { body.innerHTML = html; return; }
+  var currentHref = location.href.replace(/\/$/, '');
+  html += appLinks.map(function (a, i) {
+    var appUrl = (a.url || '').replace(/\/$/, '');
+    if (currentHref.indexOf(appUrl) !== -1 || appUrl.indexOf(currentHref) !== -1) return '';
+    return '<div class="app-link-card" data-index="' + i + '">' +
       '<div class="app-link-info">' +
         '<div class="app-link-title">' + escHtml(a.title) + '</div>' +
         '<div class="app-link-desc">' + escHtml(a.desc) + '</div>' +
       '</div><div class="app-link-arrow">→</div></div>';
-  }).join('');
+  }).filter(Boolean).join('');
+  body.innerHTML = html;
 }
 
 function renderAdminApps() {
