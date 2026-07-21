@@ -1226,6 +1226,14 @@ function renderAdminInquiries() {
   });
 }
 
+document.getElementById('adminInquiryClearAllBtn').addEventListener('click', function () {
+  if (!confirm('全ての問い合わせを削除しますか？この操作は元に戻せません。')) return;
+  saveInquiries([]);
+  showToast('全ての問い合わせを削除しました');
+  renderAdminInquiries();
+  updateInquiryBadge();
+});
+
 // ===== 管理パネル アカウント削除 =====
 function deleteUserAccount(uid, username) {
   if (!confirm('このユーザーのアカウントを削除しますか？\n\n（プロフィール・いいね・操作ログが削除されます。元に戻せません）')) return;
