@@ -582,6 +582,7 @@ function renderList() {
 
 var exportBtn = document.getElementById('exportBtn');
 if (exportBtn) exportBtn.addEventListener('click', function () {
+  if (!isAdmin()) { showToast('管理者のみ実行できます。'); return; }
   var blob = new Blob([JSON.stringify(cafes, null, 2)], { type: 'application/json' });
   var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = 'ramen-map-data.json'; a.click(); URL.revokeObjectURL(url);
   showToast('データを書き出しました。');
@@ -590,6 +591,7 @@ var importBtn = document.getElementById('importBtn');
 if (importBtn) importBtn.addEventListener('click', function () { var f = document.getElementById('importFile'); if (f) f.click(); });
 var importFile = document.getElementById('importFile');
 if (importFile) importFile.addEventListener('change', async function (e) {
+  if (!isAdmin()) { showToast('管理者のみ実行できます。'); return; }
   var file = e.target.files[0]; if (!file) return; var reader = new FileReader();
   reader.onload = async function (ev) {
     try {
@@ -1029,7 +1031,12 @@ adminModal.addEventListener('click', function (e) { if (e.target === this) this.
 
 // 管理ボタンの表示制御（動的管理者リストに基づく）
 function updateAdminBtn() {
-  adminBtn.style.display = isAdmin() ? '' : 'none';
+  var isAdm = isAdmin();
+  adminBtn.style.display = isAdm ? '' : 'none';
+  var eBtn = document.getElementById('exportBtn');
+  var iBtn = document.getElementById('importBtn');
+  if (eBtn) eBtn.style.display = isAdm ? '' : 'none';
+  if (iBtn) iBtn.style.display = isAdm ? '' : 'none';
 }
 adminBtn.addEventListener('click', openAdminPanel);
 

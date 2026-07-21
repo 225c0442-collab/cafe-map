@@ -595,12 +595,14 @@ function renderList() {
 }
 
 document.getElementById('exportBtn').addEventListener('click', function () {
+  if (!isAdmin()) { showToast('管理者のみ実行できます。'); return; }
   var blob = new Blob([JSON.stringify(cafes, null, 2)], { type: 'application/json' });
   var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = 'cafe-map-data.json'; a.click(); URL.revokeObjectURL(url);
   showToast('データを書き出しました。');
 });
 document.getElementById('importBtn').addEventListener('click', function () { document.getElementById('importFile').click(); });
 document.getElementById('importFile').addEventListener('change', async function (e) {
+  if (!isAdmin()) { showToast('管理者のみ実行できます。'); return; }
   var file = e.target.files[0]; if (!file) return; var reader = new FileReader();
   reader.onload = async function (ev) {
     try {
@@ -1033,7 +1035,12 @@ function openAdminPanel() {
 document.getElementById('adminClose').addEventListener('click', function () { adminModal.classList.remove('open'); });
 adminModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
 
-function updateAdminBtn() { adminBtn.style.display = isAdmin() ? '' : 'none'; }
+function updateAdminBtn() {
+  var isAdm = isAdmin();
+  adminBtn.style.display = isAdm ? '' : 'none';
+  document.getElementById('exportBtn').style.display = isAdm ? '' : 'none';
+  document.getElementById('importBtn').style.display = isAdm ? '' : 'none';
+}
 adminBtn.addEventListener('click', openAdminPanel);
 
 loadAdminList().then(function () { updateAdminBtn(); });
