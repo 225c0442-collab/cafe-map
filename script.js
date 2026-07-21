@@ -1118,7 +1118,7 @@ document.getElementById('inquiryClose').addEventListener('click', function () { 
 inquiryModal.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
 
 document.getElementById('inquirySendBtn').addEventListener('click', function () {
-  if (!requireLogin()) return;
+  if (!currentEmail) { showToast('ログインが必要です。'); return; }
   var text = document.getElementById('inquiryText').value.trim();
   if (!text) { showToast('問い合わせ内容を入力してください'); return; }
   loadInquiries().then(function (inquiries) {
