@@ -1237,17 +1237,19 @@ document.getElementById('adminBody').addEventListener('click', function (e) {
 
 // ===== 管理パネル アカウント削除 =====
 function deleteUserAccount(uid, username) {
-  if (!confirm('このユーザーのアカウントを削除しますか？\n\n（プロフィール・いいね・操作ログが削除されます。元に戻せません）')) return;
+  if (!confirm('このユーザーのアカウントを削除しますか？\n\n（authユーザー・プロフィール・いいね・コメント・操作ログが全て削除されます。元に戻せません）')) return;
   Promise.all([
     supabase.from('profiles').delete().eq('id', uid),
     supabase.from('likes').delete().eq('user_id', uid),
-    supabase.from('action_log').delete().eq('username', username || '')
+    supabase.from('comments').delete().eq('nickname', username || ''),
+    supabase.from('action_log').delete().eq('username', username || ''),
+    supabase.rpc('delete_auth_user', { target_user_id: uid })
   ]).then(function () {
     if (bannedIds.indexOf(uid) !== -1) { bannedIds = bannedIds.filter(function (id) { return id !== uid; }); saveAdminBans(); }
     if (adminIds.indexOf(uid) !== -1) { adminIds = adminIds.filter(function (id) { return id !== uid; }); saveAdminList(); }
     showToast('アカウントを削除しました');
     renderAdminUserList();
-  }).catch(function () { showToast('削除に失敗しました'); });
+  }).catch(function (e) { console.error(e); showToast('削除に失敗しました'); });
 }
 
 // ===== ダークモード =====
