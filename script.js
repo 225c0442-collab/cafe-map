@@ -1217,12 +1217,15 @@ function renderAdminInquiries() {
   });
 }
 
-document.getElementById('adminInquiryClearAllBtn').addEventListener('click', function () {
-  if (!confirm('全ての問い合わせを削除しますか？この操作は元に戻せません。')) return;
-  saveInquiries([]);
-  showToast('全ての問い合わせを削除しました');
-  renderAdminInquiries();
-  updateInquiryBadge();
+document.getElementById('adminBody').addEventListener('click', function (e) {
+  if (e.target.id === 'adminInquiryClearAllBtn') {
+    if (!confirm('全ての問い合わせを削除しますか？この操作は元に戻せません。')) return;
+    supabase.from('cafes').update({ comment: JSON.stringify({ inquiries: [] }) }).eq('id', INQUIRIES_CAFE_ID).then(function () {
+      showToast('全ての問い合わせを削除しました');
+      renderAdminInquiries();
+      updateInquiryBadge();
+    });
+  }
 });
 
 // ===== 管理パネル アカウント削除 =====
